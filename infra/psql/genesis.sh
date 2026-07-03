@@ -7,9 +7,9 @@
 psql -U postgres template1 (or psql -U gsc template1)
 
 # (mac) user
-createuser -U gsc -d -e -l -P -r -s slug_admin
+createuser -U gsc -d -e -l -P -r -s capybara_admin
 woofwoof
-createuser -U gsc -e -l -P slug_client
+createuser -U gsc -e -l -P capybara_client
 batabat
 
 # (linux) su - postgres

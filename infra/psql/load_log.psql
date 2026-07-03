@@ -5,7 +5,7 @@
 -- epoch_seconds is from timeStamp.epochSeconds
 -- file_name within fresh_dir
 -- file_time is from timeStamp.iso8601
--- file_type is from project i.e. slug_v1
+-- file_type is from project i.e. capybara_v1
 -- host_name is from equipment.hostName
 -- load_time is when file was processed
 -- obs_quantity is population of observations in file

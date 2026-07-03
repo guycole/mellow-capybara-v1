@@ -7,7 +7,7 @@
 #
 # psql -U heeler_py -d heeler
 #
-export PGDATABASE=slug
+export PGDATABASE=capybara
 export PGHOST=localhost
 export PGPASSWORD=woofwoof
 export PGUSER=capybara_admin
