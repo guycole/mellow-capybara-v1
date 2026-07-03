@@ -8,10 +8,10 @@
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
 TODAY=$(date '+%Y-%m-%d')
-FILE_NAME="slug-${TODAY}.tgz"
+FILE_NAME="capybara-${TODAY}.tgz"
 #
 EXPORT_DIR="export"
-SOURCE_DIR="slug"
+SOURCE_DIR="capybara"
 SUCCESS_DIR="success"
 WORK_DIR="/var/wombat/fresh"
 #

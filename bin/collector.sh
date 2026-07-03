@@ -7,7 +7,7 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
-WORK_DIR="/home/wombat/github/mellow-slug-v1/src/collector"
+WORK_DIR="/home/wombat/github/mellow-capybara-v1/src/collector"
 #
 echo "start collector"
 sleep 13
