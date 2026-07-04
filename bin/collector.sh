@@ -7,6 +7,9 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
+hostname=$(hostname)
+logger -p local3.info "collector capybara $hostname"
+#
 WORK_DIR="/home/wombat/github/mellow-capybara-v1/src/collector"
 #
 echo "start collector"
