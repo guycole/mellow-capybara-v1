@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Title: acars_driver.sh
+# Title: acars-driver.sh
 # Description: start acarsdec
 # Development Environment: Ubuntu 22.04.05 LTS
 # Author: Guy Cole (guycole at gmail dot com)
@@ -20,7 +20,7 @@ echo "start collector"
 #
 #acarsdec -i c4g -g 42 -p 0 --rtlsdr 0 --output json:file:path=/tmp/acars.json 131.450 131.525 131.550 131.725 131.850
 #acarsdec -e -i c4g -g 42 -p 0 --output json:file:path=/tmp/acars.json,rotate=hourly --rtlsdr 0 130.025 130.425 130.450 131.125 131.550 131.475
-acarsdec -e -i c4g -g 40 -p 0 --output $OUTPUT -c 130.300 $FREQUENCIES
+acarsdec -e -i c4g -g 40 -p 0 --output $OUTPUT --rtlsdr 0 -c 130.300 $FREQUENCIES
 #
 echo "end collector"
 #
