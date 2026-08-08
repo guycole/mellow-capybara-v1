@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+samples/acarsdec
+samples/dumpvdl2
+
+src/collector/config.yaml
+
