@@ -14,7 +14,7 @@ WORK_DIR="/home/wombat/github/mellow-capybara-v1/src/collector"
 #
 OUTPUT="json:file:path=/tmp/acars.json,rotate=hourly"
 #
-FREQUENCIES="-f 129.125 -f 129.350 -f 130.025 -f 130.450 -f 131.125 -f 131.475 -f 131.550"
+FREQUENCIES="129.125 129.350 130.025 130.450 131.125 131.475 131.550"
 #
 echo "start collector"
 #
