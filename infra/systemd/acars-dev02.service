@@ -1,0 +1,14 @@
+# /etc/systemd/system/acars-dev02.service
+
+[Unit]
+Description=acars-dev02
+After=multi-user.target
+
+[Service]
+User=root
+ExecStart=/home/wombat/github/mellow-capybara-v1/bin/acars-dev02.sh
+StandardOutput=null
+Restart=no
+
+# No [Install] section — acars-dev02 is not auto-started at boot.
+# It is started on-demand by bootboy.py via 'systemctl start acars-dev02.service'.

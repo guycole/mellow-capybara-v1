@@ -1,0 +1,14 @@
+# /etc/systemd/system/vdl2-dev03.service
+
+[Unit]
+Description=vdl2-dev03
+After=multi-user.target
+
+[Service]
+User=root
+ExecStart=/home/wombat/github/mellow-capybara-v1/bin/vdl2-dev03.sh
+StandardOutput=null
+Restart=no
+
+# No [Install] section — vdl2-dev03 is not auto-started at boot.
+# It is started on-demand by bootboy.py via 'systemctl start vdl2-dev03.service'.

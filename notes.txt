@@ -1,0 +1,10 @@
+bootboy will select collection mode
+capybara-dev01-sf-slow...capybara-dev10-sf-slow (acarsdec)
+capybara-dev01-sf-fast...capybara-dev04-sf-fast (vdl2)
+
+collection runs from systemd
+systemd service scripts run bash scripts so collection can run
+
+bootboy creates config.yaml and starts systemd script
+crontab runs collection
+
