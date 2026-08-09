@@ -18,88 +18,64 @@ schema = {
         "equipment": {
             "type": "object",
             "properties": {
-                "antenna":      {"type": "string"},
-                "receiverId":   {"type": "number"},
+                "antenna": {"type": "string"},
+                "receiverId": {"type": "number"},
                 "receiverType": {"type": "string"},
-                "hostName":     {"type": "string"},
-                "hostType":     {"type": "string"},
+                "hostName": {"type": "string"},
+                "hostType": {"type": "string"},
             },
             "required": ["antenna", "receiverId", "receiverType", "hostName", "hostType"],
-            "additionalProperties": False
+            "additionalProperties": False,
         },
         "geoLoc": {
             "type": "object",
             "properties": {
-                "altitude":  {"type": "number"},
-                "latitude":  {"type": "number"},
+                "altitude": {"type": "number"},
+                "latitude": {"type": "number"},
                 "longitude": {"type": "number"},
-                "siteName":  {"type": "string"},
+                "siteName": {"type": "string"},
             },
             "required": ["altitude", "latitude", "longitude", "siteName"],
-            "additionalProperties": False
-        },
-        "job": {
-            "type": "object",
-            "properties": {
-                "mode":    {"type": "string"},
-                "project": {"type": "string"},
-                "task":    {"type": "string"},
-            },
-            "required": ["mode", "project", "task"],
-            "additionalProperties": False
+            "additionalProperties": False,
         },
         "timeStamp": {
             "type": "object",
             "properties": {
                 "epochSeconds": {"type": "number"},
-                "iso8601":      {"type": "string"},
+                "iso8601": {"type": "string"},
             },
             "required": ["epochSeconds", "iso8601"],
-            "additionalProperties": False
+            "additionalProperties": False,
         },
-        "crateName":    {"type": "string"},
-        "fileName":     {"type": "string"},
-        "version":      {"type": "number"},
-        "adsbex": {
+        "crate": {"type": "string"},
+        "crateName": {"type": "string"},
+        "fileName": {"type": "string"},
+        "mode": {"type": "string"},
+        "parentFileName": {"type": "string"},
+        "project": {"type": "string"},
+        "version": {"type": "number"},
+        "observations": {"type": "array", "items": {"type": ["string", "object", "number", "boolean", "null"]}},
+        "job": {
             "type": "object",
-            "additionalProperties": {
-                "type": "object",
-                "properties": {
-                    "adsb_hex":      {"type": "string"},
-                    "category":      {"type": "string"},
-                    "emergency":     {"type": "string"},
-                    "flight":        {"type": "string"},
-                    "registration":  {"type": "string"},
-                    "model":         {"type": "string"},
-                    "ladd_flag":     {"type": "boolean"},
-                    "military_flag": {"type": "boolean"},
-                    "pia_flag":      {"type": "boolean"},
-                    "wierdo_flag":   {"type": "boolean"},
-                },
-                "required": ["adsb_hex", "category", "emergency", "flight", "registration", "model", "ladd_flag", "military_flag", "pia_flag", "wierdo_flag"],
-                "additionalProperties": False
-            }
-        },
-        "observations": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "hex":       {"type": "string"},
-                    "flight":    {"type": "string"},
-                    "latitude":  {"type": "string"},
-                    "longitude": {"type": "string"},
-                    "altitude":  {"type": "string"},
-                    "track":     {"type": "string"},
-                    "speed":     {"type": "string"},
-                },
-                "required": ["hex", "flight", "latitude", "longitude", "altitude", "track", "speed"],
-                "additionalProperties": False
-            }
+            "properties": {
+                "mode": {"type": "string"},
+                "project": {"type": "string"},
+                "task": {"type": "string"},
+            },
+            "required": ["mode", "project", "task"],
+            "additionalProperties": False,
         },
     },
-    "required": ["equipment", "geoLoc", "job", "timeStamp", "crateName", "fileName", "version", "adsbex", "observations"],
-    "additionalProperties": False
+    "required": ["equipment", "geoLoc", "timeStamp"],
+    "anyOf": [
+        {
+            "required": ["crate", "fileName", "mode", "parentFileName", "project", "version", "observations"],
+        },
+        {
+            "required": ["job", "crateName", "fileName", "version", "observation"],
+        },
+    ],
+    "additionalProperties": False,
 }
 
 class JsonHelper:
@@ -125,11 +101,11 @@ class JsonHelper:
         return True
 
     def json_file_writer(self, file_name: str, json_data: dict[str, any]) -> bool:
-#        try:
-#            validate(instance=json_data, schema=schema)
-#        except Exception as error:
-#            logger.error(f"json validation failed for {file_name}: {error.message}")
-#            return False
+        try:
+            validate(instance=json_data, schema=schema)
+        except Exception as error:
+            logger.error(f"json validation failed for {file_name}: {error}")
+            return False
 
         try:
             with open(file_name, "w") as out_file:

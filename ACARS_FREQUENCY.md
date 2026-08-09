@@ -11,10 +11,12 @@
 | 130.425         |                                   |  X  |     |     |
 | 130.450         | ARINC en-route overflow           |  X  |     |     |
 | 130.825         | local/terminal high-density       |     |     |     |
+| 130.875         |                                   |  X  |     |     |
 | 131.125         |                                   |  X  |     |     |
 | 131.425         |                                   |     |     |     |
 | 131.475         | DataPlus / Air Canada domestic    |     |     |     |
 | 131.550         | ARINC primary (highest traffic)   |  X  |     |     |
+| 131.650         |                                   |     |     |     |
 | 131.725         | European primary                  |     |     |     |
 | 131.850         |                                   |     |     |     |
 | 136.575         |                                   |     |     |     |
@@ -36,9 +38,16 @@
 | 136.300         | SITA high-density airport terminal  |  X  |     |     |
 | 136.600         | ARINC en-route secondary            |  X  |     |     |
 | 136.650         | ARINC terminal / regional           |  X  |     |     |
+| 136.675         |                                     |     |     |     |
 | 136.700         | SITA en-route                       |  X  |     |     |
+| 136.725         |                                     |     |     |     |
+| 136.750         |                                     |     |     |     |
+| 136.775         |                                     |     |     |     |
 | 136.800         | SITA terminal / regional            |  X  |     |     |
+| 136.825         |                                     |     |     |     |
 | 136.850         | SITA wide-area en-route             |     |     |     |
+| 136.875         |                                     |     |     |     |
 | 136.900         | secondary en-route                  |     |     |     |
+| 136.925         |                                     |     |     |     |
 | 136.950         | wide-area en-route backup           |     |     |     |
 | 136.975         | primary global / CSC                |  X  |     |     |

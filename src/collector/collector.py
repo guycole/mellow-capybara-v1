@@ -4,11 +4,11 @@
 # Development Environment: Ubuntu 22.04.5 LTS/python 3.10.12
 # Author: G.S. Cole (guycole at gmail dot com)
 #
-
 import datetime
 import json
 import logging
 import os
+import shutil
 import sys
 import time
 import uuid
@@ -45,11 +45,9 @@ class Collector:
 
         self.raw_dir = args["rawDir"]
 
-        self.frequencies = args["receiver"]["frequencies"]
-
         self.jh = JsonHelper()
 
-    def acars_file_discovery(self):
+    def file_discovery(self):
         gmt_now = datetime.datetime.now(datetime.timezone.utc)
 
         year = gmt_now.year
@@ -85,23 +83,21 @@ class Collector:
         return results
 
     def read_observations(self, file_name:str):
-        print(file_name)
-
         observations = []
-
-        # dumpvdl2 must be read line by line because invalid json
         with open(file_name, "r") as acars_file:
+            # must be read line by line because file is not valid json list
             try:
                 buffer = acars_file.readlines()
                 for row in buffer:
                     observations.append(row.strip())
             except Exception as error:
                 logger.exception("file read error: %s", error)
-                adsbex_key = None
 
         return observations
 
-    def write_json_wrapper(self, base_file_name:str, observations) -> None:
+    def write_json_wrapper(self, observations: list[str], parent_file_name: str) -> bool:
+        file_name = f"{str(uuid.uuid4())}.json"
+
         epoch_seconds = int(time.time())
         dt_object_utc = datetime.datetime.fromtimestamp(
             epoch_seconds, tz=zoneinfo.ZoneInfo("UTC")
@@ -126,29 +122,37 @@ class Collector:
                 "iso8601": dt_object_utc.isoformat(),
             },
             "crate": self.crate_name,
-            "fileName": f"{base_file_name}.json",
+            "fileName": file_name,
             "mode": self.receiver_mode,
+            "parentFileName": parent_file_name,
             "project": self.receiver_task,
             "version": 1,
             "observations": observations,
         }
 
-        outfile_json = f"{self.fresh_dir}/{base_file_name}.json"
-        JsonHelper().json_file_writer(outfile_json, results)
+        outfile_json = f"{self.fresh_dir}/{file_name}"
+        retflag = JsonHelper().json_file_writer(outfile_json, results)
 
+        return retflag
 
     def execute(self) -> None:
-        print(f"collector execute: {self.receiver_task}")
+        logger.info(f"collector execute: {self.receiver_task}")
 
-        candidates = self.acars_file_discovery()
+        candidates = self.file_discovery()
+        logger.info(f"{len(candidates)} files to process")
         for candidate in candidates:
             observations = self.read_observations(candidate)
+            logger.info(f"processing {(candidate)} with {len(observations)} observations")
 
-            base_file_name = str(uuid.uuid4())
-            print(f"base filename: {base_file_name}")
+            parent_file_name = os.path.basename(candidate)
+            retflag = self.write_json_wrapper(observations, parent_file_name)
+            if retflag:
+                logger.info(f"successfully wrote wrapper for {parent_file_name}")
+            else:
+                logger.error(f"failed to write wrapper for {parent_file_name}")
 
-            self.write_json_wrapper(base_file_name, observations)
-            os.remove(candidate)
+            dest_file = f"{self.fresh_dir}/{parent_file_name}"
+            shutil.move(candidate, dest_file)
 
 #
 # argv[1] = configuration filename
