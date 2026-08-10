@@ -40,6 +40,7 @@ class Collector:
         self.antenna = args["receiver"]["antenna"]
         self.receiver_id = args["receiver"]["receiverId"]
         self.receiver_mode = args["receiver"]["mode"]
+        self.receiver_project = args["receiver"]["project"]
         self.receiver_task = args["receiver"]["task"]
         self.receiver_type = args["receiver"]["type"]
 
@@ -62,7 +63,7 @@ class Collector:
         acars_current = f"acars_{year}{month:02d}{day:02d}_{hour:02d}.json"
 
         results = []
-        
+
         os.chdir(self.raw_dir)
         targets = sorted(os.listdir("."))
         logger.info(f"{len(targets)} files noted")
@@ -82,7 +83,7 @@ class Collector:
 
         return results
 
-    def read_observations(self, file_name:str):
+    def read_observations(self, file_name: str):
         observations = []
         with open(file_name, "r") as acars_file:
             # must be read line by line because file is not valid json list
@@ -95,7 +96,9 @@ class Collector:
 
         return observations
 
-    def write_json_wrapper(self, observations: list[str], parent_file_name: str) -> bool:
+    def write_json_wrapper(
+        self, observations: list[str], parent_file_name: str
+    ) -> bool:
         file_name = f"{str(uuid.uuid4())}.json"
 
         epoch_seconds = int(time.time())
@@ -117,15 +120,18 @@ class Collector:
                 "longitude": self.longitude,
                 "siteName": self.site_name,
             },
+            "job": {
+                "mode": self.receiver_mode,
+                "project": self.receiver_project,
+                "task": self.receiver_task,
+            },
             "timeStamp": {
                 "epochSeconds": epoch_seconds,
                 "iso8601": dt_object_utc.isoformat(),
             },
-            "crate": self.crate_name,
+            "crateName": self.crate_name,
             "fileName": file_name,
-            "mode": self.receiver_mode,
             "parentFileName": parent_file_name,
-            "project": self.receiver_task,
             "version": 1,
             "observations": observations,
         }
@@ -142,7 +148,9 @@ class Collector:
         logger.info(f"{len(candidates)} files to process")
         for candidate in candidates:
             observations = self.read_observations(candidate)
-            logger.info(f"processing {(candidate)} with {len(observations)} observations")
+            logger.info(
+                f"processing {(candidate)} with {len(observations)} observations"
+            )
 
             parent_file_name = os.path.basename(candidate)
             retflag = self.write_json_wrapper(observations, parent_file_name)
@@ -153,6 +161,7 @@ class Collector:
 
             dest_file = f"{self.fresh_dir}/{parent_file_name}"
             shutil.move(candidate, dest_file)
+
 
 #
 # argv[1] = configuration filename

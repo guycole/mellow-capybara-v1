@@ -19,29 +19,29 @@ class Base(DeclarativeBase):
     pass
 
 class DailyScore(Base):
-    __tablename__ = "hyena_daily_score"
+    __tablename__ = "capybara_daily_score"
 
     id = Column(Integer, primary_key=True)
     crate_name = Column(String)
     file_quantity = Column(Integer)
     host_name = Column(String)
-    quantity_adsb = Column(Integer)
-    quantity_uat = Column(Integer)
+    quantity_acars = Column(Integer)
+    quantity_vdl2 = Column(Integer)
     score_date = Column(Date)
 
     def __init__(self, args: dict[str, any]):
         self.crate_name = args["crate_name"]
         self.file_quantity = args["file_quantity"]
         self.host_name = args["host_name"]
-        self.quantity_adsb = args["quantity_adsb"]
-        self.quantity_uat = args["quantity_uat"]
+        self.quantity_acars = args["quantity_acars"]
+        self.quantity_vdl2 = args["quantity_vdl2"]
         self.score_date = args["score_date"]
 
     def __repr__(self):
         return f"daily_score({self.score_date} {self.host_name})"
 
 class GeoLoc(Base):
-    __tablename__ = "hyena_geo_loc"
+    __tablename__ = "capybara_geo_loc"
 
     id = Column(Integer, primary_key=True)
     altitude = Column(Float)
@@ -52,7 +52,7 @@ class GeoLoc(Base):
     longitude = Column(Float)
     site_name = Column(String)
     speed = Column(Float)
-   
+
     def __init__(self, args: dict[str, any]):
         self.altitude = args["altitude"]
         self.course = args["course"]
@@ -69,7 +69,7 @@ class GeoLoc(Base):
 class LoadLog(Base):
     """load_log table definition"""
 
-    __tablename__ = "hyena_load_log"
+    __tablename__ = "capybara_load_log"
 
     id = Column(Integer, primary_key=True)
     crate_name = Column(String)
@@ -81,6 +81,7 @@ class LoadLog(Base):
     mode = Column(String)
     obs_quantity = Column(Integer)
     obs_time = Column(DateTime)
+    parent_file_name = Column(String)
     site_name = Column(String)
     task = Column(String)
 
@@ -94,6 +95,7 @@ class LoadLog(Base):
         self.mode = args["mode"]
         self.obs_quantity = args["obs_quantity"]
         self.obs_time = args["obs_time"]
+        self.parent_file_name = args["parent_file_name"]
         self.site_name = args["site_name"]
         self.task = args["task"]
 

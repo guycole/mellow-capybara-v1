@@ -71,6 +71,42 @@ class JsonHelperSchemaTests(unittest.TestCase):
 
         self.assertTrue(self.helper.json_file_writer("/tmp/vdl2-wrapper.json", payload))
 
+    def test_accepts_hybrid_legacy_wrapper_shape(self) -> None:
+        payload = {
+            "equipment": {
+                "antenna": "multicoupler",
+                "receiverId": 11,
+                "receiverType": "rtl-sdr-v3",
+                "hostName": "c4g",
+                "hostType": "odroid c4",
+            },
+            "geoLoc": {
+                "altitude": 0,
+                "latitude": 38.108,
+                "longitude": -122.268,
+                "siteName": "vallejo01",
+            },
+            "job": {
+                "mode": "acarsdec-sf1",
+                "project": "capybara-v1",
+                "task": "heeler-v2-iwlist",
+            },
+            "timeStamp": {
+                "epochSeconds": 1786324005,
+                "iso8601": "2026-08-10T01:06:45+00:00",
+            },
+            "crateName": "wombat04",
+            "fileName": "e513bb78-2691-4a76-8fa2-dd4e2e15b7c4.json",
+            "parentFileName": "acars-wrapper.json",
+            "version": 1,
+            "observations": [
+                '{"equipment": {"antenna": "multicoupler"}}',
+                '{"acarsdec": {"app": {"name": "acarsdec"}}}',
+            ],
+        }
+
+        self.assertTrue(self.helper.json_file_writer("/tmp/hybrid-wrapper.json", payload))
+
 
 if __name__ == "__main__":
     unittest.main()
