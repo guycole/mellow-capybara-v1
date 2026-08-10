@@ -10,5 +10,7 @@ export PGHOST=localhost
 export PGPASSWORD=woofwoof
 export PGUSER=capybara_admin
 #
-psql $PGDATABASE -c "drop table capybara_load_log"
+psql $PGDATABASE -c "drop table if exists capybara_daily_score"
+psql $PGDATABASE -c "drop table if exists capybara_load_log"
+psql $PGDATABASE -c "drop table if exists capybara_geo_loc"
 #

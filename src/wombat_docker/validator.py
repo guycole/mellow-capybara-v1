@@ -9,7 +9,9 @@ import datetime
 import json
 import os
 
-from postgres import PostGres
+from helper.json_helper import JsonHelper, schema
+
+from helper.postgres import PostGres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("capybara")
@@ -19,79 +21,92 @@ class Validator:
     def __init__(self, postgres: PostGres):
         self.postgres = postgres
 
-        # path from inside docker container
-        self.failure_dir = "/mnt/wombat/failure/"
-        self.fresh_dir = "/mnt/wombat/fresh/capybara"
-        self.success_dir = "/mnt/wombat/capybara/success/"
-
-        # path for mac development
-        # self.failure_dir = "/var/wombat/failure/"
-        # self.fresh_dir = "/var/wombat/fresh/capybara"
-        # self.success_dir = "/var/wombat/capybara/success/"
-
+        self.failure_dir = os.environ.get("FAILURE_DIR", "/var/wombat/failure")
+        self.fresh_dir = os.environ.get("FRESH_DIR", "/var/wombat/fresh/capybara")
+        self.success_dir = os.environ.get("SUCCESS_DIR", "/var/wombat/capybara/success")
+      
         self.failure = 0
         self.success = 0
+
+        self.jh = JsonHelper()
 
     def file_failure(self, file_name: str):
         logger.info(f"file failure:{file_name}")
 
         self.failure += 1
-        os.rename(file_name, self.failure_dir + file_name)
+#        os.rename(file_name, self.failure_dir + file_name)
 
     def file_success(self, file_name: str):
         #logger.info(f"file success:{file_name}")
 
         self.success += 1
-        os.rename(file_name, self.success_dir + "/" + file_name)
+#        os.rename(file_name, self.success_dir + "/" + file_name)
 
-    def file_reader(self, file_name: str) -> bool:
+    def load_log_test(self, file_name: str) -> bool:
         try:
-            with open(file_name, "r", encoding="utf-8") as in_file:
-                self.raw_buffer = json.load(in_file)
-        except Exception as error:
-            logger.error(f"file read failed for {file_name}: {error}")
-            return False
+            candidate = self.postgres.load_log_select_by_file_name(file_name)
+            if candidate is None:
+                logger.info(f"processing new file:{file_name}")
 
-        return True
-
-    def load_log_test(self, test_file_name: str) -> bool:
-        try:
-            candidate = self.postgres.load_log_select_by_file_name(test_file_name)
-            if candidate is not None:
-                logger.info(f"skippping already processed:{test_file_name}")
-                return False
-            else:
+                geo_loc = self.postgres.geo_loc_select_by_site(self.jh.raw_json["geoLoc"]["siteName"])
+                if len(geo_loc) == 0:
+                    logger.error(f"must insert geo_loc for site: {self.jh.raw_json['geoLoc']['siteName']}")
+                    return False
+           
                 load_log = {
-                    "epoch_seconds": self.raw_buffer["timeStamp"]["epochSeconds"],
-                    "file_name": test_file_name,
-                    "file_time": self.raw_buffer["timeStamp"]["iso8601"],
-                    "file_type": self.raw_buffer["project"],
-                    "host_name": self.raw_buffer["equipment"]["hostName"],
+                    "crate_name": self.jh.raw_json["crateName"],
+                    "epoch_seconds": self.jh.raw_json["timeStamp"]["epochSeconds"],
+                    "file_name": file_name,
+                    "geo_loc_id": geo_loc[0].id,
+                    "host_name": self.jh.raw_json["equipment"]["hostName"],
                     "load_time": datetime.datetime.now(),
-                    "obs_quantity": len(self.raw_buffer["observations"]),
-                    "site": self.raw_buffer["geoLoc"]["siteName"],
+                    "mode": self.jh.raw_json["job"]["mode"],
+                    "obs_quantity": len(self.jh.raw_json["observations"]),
+                    "obs_time": self.jh.raw_json["timeStamp"]["iso8601"],
+                    "parent_file_name": self.jh.raw_json["parentFileName"],
+                    "site_name": self.jh.raw_json["geoLoc"]["siteName"],
+                    "task": self.jh.raw_json["job"]["task"],
                 }
 
                 self.postgres.load_log_insert(load_log)
 
+                if len(self.jh.raw_json["observations"]) < 1:
+                    logger.info("skipping file with no observations")
+                    return False
+
                 return True
+            else:
+                logger.info(f"skippping already processed:{file_name}")
+                return False
         except Exception as error:
-            logger.error(f"postgres insert failed for {test_file_name}: {error}")        
+            logger.error(f"postgres insert failed for {file_name}: {error}")
         
         return False
 
     def file_processor(self, file_name: str) -> None:
+        logger.info(f"processing files: {file_name}")
+
         if os.path.isfile(file_name) is False:
             logger.warning(f"skipping non-file:{file_name}")
             self.file_failure(file_name)
             return
 
-        if not self.file_reader(file_name):
+        if not self.jh.json_file_reader(file_name, True):
             logger.warning(f"file read failed for {file_name}")
             self.file_failure(file_name)
             return
-        
-        if self.raw_buffer["version"] == 1 and self.raw_buffer["project"] == "capybara-v1":
+
+        if os.path.getsize(file_name) < 1:
+            logger.warning(f"skipping empty file:{file_name}")
+            self.file_failure(file_name)
+            return
+
+        if self.jh.raw_json["fileName"] != file_name:
+            logger.warning(f"mismatched file name: {self.jh.raw_json['fileName']} vs {file_name}")
+            self.file_failure(file_name)
+            return
+
+        if (self.jh.raw_json["version"] == 1 and self.jh.raw_json["job"]["project"] == "capybara-v1"):
             pass
         else:
             logger.warning(f"invalid version or project for {file_name}")
@@ -112,6 +127,11 @@ class Validator:
         logger.info(f"{len(targets)} files noted")
 
         for target in targets:
+            if target.startswith("acars") or target.startswith("vdl2"):
+                logger.info(f"skipping raw:{target}")
+                # move to success dir
+                continue
+
             self.file_processor(target)
 
         logger.info(f"validator success:{self.success} failure:{self.failure}")

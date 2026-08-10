@@ -54,7 +54,10 @@ schema = {
         "parentFileName": {"type": "string"},
         "project": {"type": "string"},
         "version": {"type": "number"},
-        "observations": {"type": "array", "items": {"type": ["string", "object", "number", "boolean", "null"]}},
+        "observations": {
+            "type": ["array", "string"],
+            "items": {"type": ["string", "object", "number", "boolean", "null"]},
+        },
         "job": {
             "type": "object",
             "properties": {
@@ -72,7 +75,7 @@ schema = {
             "required": ["crate", "fileName", "mode", "parentFileName", "project", "version", "observations"],
         },
         {
-            "required": ["job", "crateName", "fileName", "version", "observation"],
+            "required": ["job", "crateName", "fileName", "version", "observations"],
         },
     ],
     "additionalProperties": False,

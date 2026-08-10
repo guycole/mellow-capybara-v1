@@ -11,6 +11,7 @@ import sys
 import yaml
 from yaml.loader import SafeLoader
 
+
 class BootBoy:
 
     def configuration(self, target: str) -> dict[str, any]:
@@ -66,9 +67,7 @@ class BootBoy:
     def crontab(self) -> None:
         import subprocess
 
-        crontab_entry = (
-            "*/10 * * * * $HOME/github/mellow-capybara-v1/bin/collector.sh > /dev/null 2>&1"
-        )
+        crontab_entry = "*/10 * * * * $HOME/github/mellow-capybara-v1/bin/collector.sh > /dev/null 2>&1"
 
         # Always overwrite — collector is dedicated to this workload and must have
         # exactly one cron entry.

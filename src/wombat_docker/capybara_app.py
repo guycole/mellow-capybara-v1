@@ -11,7 +11,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from validator import Validator
-from postgres import PostGres
+
+from helper.postgres import PostGres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("capybara")
@@ -21,11 +22,7 @@ class CapybaraApp:
     def __init__(self, stunt_box: str):
         self.stunt_box = stunt_box
 
-        # wombat docker
-        self.db_conn = "postgresql+psycopg2://capybara_client:batabat@172.17.0.1:5432/capybara"
-
-        # mac development
-        # self.db_conn = "postgresql+psycopg2://capybara_client:batabat@localhost:5432/capybara"
+        self.db_conn = os.environ.get("DB_CONN", "postgresql+psycopg2://capybara_client:batabat@localhost:5432/capybara")
 
         db_engine = create_engine(self.db_conn, echo=False)
         self.postgres = PostGres(sessionmaker(bind=db_engine, expire_on_commit=False))
