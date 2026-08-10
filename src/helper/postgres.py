@@ -54,8 +54,8 @@ class PostGres:
                     session.add(candidate)
                 else:
                     existing.file_quantity += candidate.file_quantity
-                    existing.quantity_adsb += candidate.quantity_adsb
-                    existing.quantity_uat += candidate.quantity_uat
+                    existing.quantity_acars += candidate.quantity_acars
+                    existing.quantity_vdl2 += candidate.quantity_vdl2
 
                 session.commit()
         except Exception as error:

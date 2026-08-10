@@ -25,16 +25,16 @@ class DailyScore(Base):
     crate_name = Column(String)
     file_quantity = Column(Integer)
     host_name = Column(String)
-    quantity_adsb = Column(Integer)
-    quantity_uat = Column(Integer)
+    quantity_acars = Column(Integer)
+    quantity_vdl2 = Column(Integer)
     score_date = Column(Date)
 
     def __init__(self, args: dict[str, any]):
         self.crate_name = args["crate_name"]
         self.file_quantity = args["file_quantity"]
         self.host_name = args["host_name"]
-        self.quantity_adsb = args["quantity_adsb"]
-        self.quantity_uat = args["quantity_uat"]
+        self.quantity_acars = args["quantity_acars"]
+        self.quantity_vdl2 = args["quantity_vdl2"]
         self.score_date = args["score_date"]
 
     def __repr__(self):

@@ -70,6 +70,25 @@ class Validator:
 
                 self.postgres.load_log_insert(load_log)
 
+                if "slow" in self.jh.raw_json["job"]["mode"]:
+                    quantity_acars = len(self.jh.raw_json["observations"])
+                    quantity_vdl2 = 0
+                else:
+                    quantity_acars = 0
+                    quantity_vdl2 = len(self.jh.raw_json["observations"])
+
+                daily_score = {
+                    "crate_name": self.jh.raw_json["crateName"],
+                    "file_quantity": 1,
+                    "host_name": self.jh.raw_json["equipment"]["hostName"],
+                    "obs_quantity": len(self.jh.raw_json["observations"]),
+                    "quantity_acars": quantity_acars,
+                    "quantity_vdl2": quantity_vdl2,
+                    "score_date": datetime.date.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"][:10]),
+                }
+
+                self.postgres.daily_score_insert_or_update(daily_score)
+
                 if len(self.jh.raw_json["observations"]) < 1:
                     logger.info("skipping file with no observations")
                     return False
