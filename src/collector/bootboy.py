@@ -5,8 +5,12 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 import json
+import os
+import platform
 import socket
+import subprocess
 import sys
+import time
 
 import yaml
 from yaml.loader import SafeLoader
@@ -14,7 +18,36 @@ from yaml.loader import SafeLoader
 
 class BootBoy:
 
-    def configuration(self, target: str) -> dict[str, any]:
+    def can_manage_systemd(self, service_name: str) -> bool:
+        if platform.system() != "Linux":
+            print(f"{service_name} management skipped on non-Linux host.")
+            return False
+
+        if os.geteuid() != 0:
+            print(f"{service_name} management skipped: must run as root (systemd boot path).")
+            return False
+
+        return True
+
+    def run_systemctl(self, action: str, service_name: str) -> tuple[int, str]:
+        # Use --no-block for start so systemd queues the job and returns
+        # immediately, preventing a deadlock when bootboy itself runs under systemd.
+        cmd = ["systemctl", "--no-block", action, service_name] if action == "start" else ["systemctl", action, service_name]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        stderr = proc.stderr.strip()
+        return proc.returncode, stderr
+
+    def verify_service_active(self, service_name: str) -> None:
+        # --no-block returns immediately; give systemd a moment to actually
+        # start (or fail to start) the service before checking.
+        time.sleep(2)
+        returncode, _ = self.run_systemctl("is-active", service_name)
+        if returncode == 0:
+            print(f"{service_name} is active.")
+        else:
+            print(f"{service_name} is NOT active after start — check: journalctl -u {service_name}")
+
+    def configuration(self, target: str) -> str:
         print(f"BootBoy: configuring {target}")
 
         # Build the path to the admin JSON file
@@ -60,33 +93,46 @@ class BootBoy:
             print(f"Error writing config.yaml: {e}")
             sys.exit(1)
 
-        return {
-            "receiver_task": receiver.get("task", "xxx"),
-        }
+        return receiver.get("task", "xxx")
 
     def crontab(self) -> None:
-        import subprocess
-
-        crontab_entry = "*/10 * * * * $HOME/github/mellow-capybara-v1/bin/collector.sh > /dev/null 2>&1"
+        crontab_entry = "13 * * * * $HOME/github/mellow-capybara-v1/bin/collector.sh > /dev/null 2>&1"
 
         # Always overwrite — collector is dedicated to this workload and must have
         # exactly one cron entry.
         new_crontab = crontab_entry + "\n"
         try:
-            proc = subprocess.run(
-                ["crontab", "-u", "wombat", "-"], input=new_crontab, text=True
-            )
+            proc = subprocess.run(["crontab", "-u", "wombat", "-"], input=new_crontab, text=True)
             if proc.returncode == 0:
-                print("Crontab updated for wombat.")
+                print("Crontab updated for capybara.")
             else:
-                print("Failed to update wombat's crontab.")
+                print("Failed to update capybara crontab.")
         except Exception as e:
-            print(f"Error updating wombat's crontab: {e}")
+            print(f"Error updating capybara crontab: {e}")
 
     def execute(self, target: str) -> None:
-        config = self.configuration(target)
+        task = self.configuration(target)
+
         self.crontab()
 
+        service_name = "bogus"
+        if task == "capybara-v1-dev1-fast":
+            service_name = "vdl2-dev01.service"
+        elif task == "capybara-v1-dev2-fast":
+            service_name = "vdl2-dev02.service"
+        elif task == "capybara-v1-dev3-fast":
+            service_name = "vdl2-dev03.service"
+        elif task == "capybara-v1-dev4-fast":
+            service_name = "vdl2-dev04.service"
+        else:
+            print(f"BootBoy: unknown task {task} for {target}")
+
+        returncode, stderr = self.run_systemctl("start", service_name)
+        if returncode == 0:
+            print(f"{service_name} start queued")
+            self.verify_service_active(service_name)
+        else:
+            print(f"Failed to start {service_name}: {stderr}")
 
 #
 #
