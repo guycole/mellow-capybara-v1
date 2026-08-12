@@ -5,7 +5,6 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 import json
-import importlib
 import os
 import platform
 import socket
@@ -14,9 +13,7 @@ import sys
 import time
 from typing import Sequence
 
-yaml = None
-if importlib.util.find_spec("yaml") is not None:
-    yaml = importlib.import_module("yaml")
+import yaml
 
 
 class BootBoy:
@@ -73,10 +70,6 @@ class BootBoy:
 
     def configuration(self, target: str) -> str:
         print(f"BootBoy: configuring {target}")
-
-        if yaml is None:
-            print("PyYAML is required to generate config.yaml.")
-            sys.exit(1)
 
         # Build the path to the admin JSON file
         admin_json_path = f"/var/wombat/admin/{target}.json"
