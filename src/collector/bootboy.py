@@ -110,6 +110,7 @@ class BootBoy:
             },
             "freshDir": "/var/wombat/fresh/capybara",
             "geoLoc": geo_loc,
+            "rawDir": "/tmp",
         }
 
         # Write to config.yaml in the current directory
