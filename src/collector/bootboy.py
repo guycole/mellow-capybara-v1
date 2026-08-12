@@ -5,18 +5,25 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 import json
+import importlib
 import os
 import platform
 import socket
 import subprocess
 import sys
 import time
+from typing import Sequence
 
-import yaml
-from yaml.loader import SafeLoader
+yaml = None
+if importlib.util.find_spec("yaml") is not None:
+    yaml = importlib.import_module("yaml")
 
 
 class BootBoy:
+
+    def run_command(self, cmd: Sequence[str]) -> tuple[int, str, str]:
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
 
     def can_manage_systemd(self, service_name: str) -> bool:
         if platform.system() != "Linux":
@@ -33,9 +40,26 @@ class BootBoy:
         # Use --no-block for start so systemd queues the job and returns
         # immediately, preventing a deadlock when bootboy itself runs under systemd.
         cmd = ["systemctl", "--no-block", action, service_name] if action == "start" else ["systemctl", action, service_name]
-        proc = subprocess.run(cmd, capture_output=True, text=True)
-        stderr = proc.stderr.strip()
-        return proc.returncode, stderr
+        returncode, _, stderr = self.run_command(cmd)
+        return returncode, stderr
+
+    def report_service_failure(self, service_name: str) -> None:
+        print(f"{service_name} failed to reach active state.")
+
+        commands = [
+            ("systemctl status", ["systemctl", "status", "--no-pager", "--full", service_name]),
+            ("recent journal", ["journalctl", "-u", service_name, "-n", "20", "--no-pager"]),
+        ]
+
+        for label, cmd in commands:
+            returncode, stdout, stderr = self.run_command(cmd)
+            details = stdout or stderr
+            if returncode == 0 and details:
+                print(f"--- {label}: {service_name} ---")
+                print(details)
+            elif details:
+                print(f"--- {label} unavailable for {service_name} ---")
+                print(details)
 
     def verify_service_active(self, service_name: str) -> None:
         # --no-block returns immediately; give systemd a moment to actually
@@ -45,10 +69,14 @@ class BootBoy:
         if returncode == 0:
             print(f"{service_name} is active.")
         else:
-            print(f"{service_name} is NOT active after start — check: journalctl -u {service_name}")
+            self.report_service_failure(service_name)
 
     def configuration(self, target: str) -> str:
         print(f"BootBoy: configuring {target}")
+
+        if yaml is None:
+            print("PyYAML is required to generate config.yaml.")
+            sys.exit(1)
 
         # Build the path to the admin JSON file
         admin_json_path = f"/var/wombat/admin/{target}.json"
@@ -126,6 +154,9 @@ class BootBoy:
             service_name = "vdl2-dev04.service"
         else:
             print(f"BootBoy: unknown task {task} for {target}")
+
+        if not self.can_manage_systemd(service_name):
+            return
 
         returncode, stderr = self.run_systemctl("start", service_name)
         if returncode == 0:
