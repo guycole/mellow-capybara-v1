@@ -1,6 +1,6 @@
 #
-# Title: validator.py
-# Description: ensure valid capybara files
+# Title: loader.py
+# Description: load capybara files
 # Development Environment: Ubuntu 22.04.5 LTS/python 3.10.12
 # Author: G.S. Cole (guycole at gmail dot com)
 #
@@ -14,17 +14,19 @@ from helper.json_helper import JsonHelper, schema
 from helper.postgres import PostGres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger("capybara")
+logger = logging.getLogger("loader")
 
-class Validator:
+class Loader:
 
     def __init__(self, postgres: PostGres):
         self.postgres = postgres
 
-        self.failure_dir = os.environ.get("FAILURE_DIR", "/var/wombat/failure")
+        self.failure_dir = os.environ.get("FAILURE_DIR", "/var/peccary/capybara/failure")
+        self.fresh_dir = os.environ.get("FRESH_DIR", "/var/peccary/capybara/fresh")
+
+        #temporary
         self.fresh_dir = os.environ.get("FRESH_DIR", "/var/wombat/fresh/capybara")
-        self.success_dir = os.environ.get("SUCCESS_DIR", "/var/wombat/capybara/success")
-      
+ 
         self.failure = 0
         self.success = 0
 
@@ -34,13 +36,13 @@ class Validator:
         logger.info(f"file failure:{file_name}")
 
         self.failure += 1
-        os.rename(file_name, self.failure_dir + file_name)
+#        os.rename(file_name, self.failure_dir + file_name)
 
     def file_success(self, file_name: str):
         #logger.info(f"file success:{file_name}")
 
         self.success += 1
-        os.rename(file_name, self.success_dir + "/" + file_name)
+#        os.rename(file_name, self.success_dir + "/" + file_name)
 
     def load_log_test(self, file_name: str) -> bool:
         try:
@@ -88,11 +90,6 @@ class Validator:
                 }
 
                 self.postgres.daily_score_insert_or_update(daily_score)
-
-                if len(self.jh.raw_json["observations"]) < 1:
-                    logger.info("skipping file with no observations")
-                    return False
-
                 return True
             else:
                 logger.info(f"skippping already processed:{file_name}")
@@ -102,6 +99,30 @@ class Validator:
         
         return False
 
+    def load_obs(self, obs: dict[str, any]) -> None:
+        if type(obs) is not dict:
+            logger.error(f"invalid observation type: {type(obs)}")
+            return
+
+        if "vdl2" in obs:
+            print(f"vdl2 obs")
+            app = obs["vdl2"]["app"]
+            t = obs["vdl2"]["t"]
+            freq = obs["vdl2"]["freq"]
+            avlc = obs["vdl2"]["avlc"]
+            print(f"{avlc['src']} {avlc['dst']}")
+
+#            app_name = obs["vdl2"]["name"]
+#            time_stamp = obs["vdl2"]["t"]["sec"]
+#            hex = obs["vdl2"]["avlc"]["src"]["addr"]
+        else:
+            print(f"acars obs")
+            app_name = obs["app"]["name"]
+            flight = obs["flight"]
+            frequency = obs["freq"]
+            tail = obs["tail"]
+            time_stamp = obs["timestamp"]
+
     def file_processor(self, file_name: str) -> None:
         logger.info(f"processing files: {file_name}")
 
@@ -110,13 +131,13 @@ class Validator:
             self.file_failure(file_name)
             return
 
-        if not self.jh.json_file_reader(file_name, True):
-            logger.warning(f"file read failed for {file_name}")
+        if os.path.getsize(file_name) < 1:
+            logger.warning(f"skipping empty file:{file_name}")
             self.file_failure(file_name)
             return
 
-        if os.path.getsize(file_name) < 1:
-            logger.warning(f"skipping empty file:{file_name}")
+        if not self.jh.json_file_reader(file_name, True):
+            logger.warning(f"file read failed for {file_name}")
             self.file_failure(file_name)
             return
 
@@ -131,28 +152,28 @@ class Validator:
             logger.warning(f"invalid version or project for {file_name}")
             self.file_failure(file_name)
             return
-        
+
         if self.load_log_test(file_name):
-            self.file_success(file_name)
+            print(len(self.jh.raw_json["observations"]))
+
+            for obs in self.jh.raw_json["observations"]:
+                self.load_obs(obs)
+
+#            self.file_success(file_name)
         else:
             self.file_failure(file_name)
 
     def execute(self) -> None:
-        logger.info(f"validator fresh dir:{self.fresh_dir}")
+        logger.info(f"loader fresh dir:{self.fresh_dir}")
 
         os.chdir(self.fresh_dir)
         targets = sorted(os.listdir("."))
         logger.info(f"{len(targets)} files noted")
 
         for target in targets:
-            if target.startswith("acars") or target.startswith("vdl2"):
-                logger.info(f"skipping raw:{target}")
-                # move to success dir
-                continue
-
             self.file_processor(target)
 
-        logger.info(f"validator success:{self.success} failure:{self.failure}")
+        logger.info(f"loader success:{self.success} failure:{self.failure}")
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***
