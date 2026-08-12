@@ -85,12 +85,13 @@ class Collector:
 
     def read_observations(self, file_name: str):
         observations = []
+
         with open(file_name, "r") as acars_file:
             # must be read line by line because file is not valid json list
             try:
                 buffer = acars_file.readlines()
                 for row in buffer:
-                    observations.append(row.strip())
+                    observations.append(json.loads(row))
             except Exception as error:
                 logger.exception("file read error: %s", error)
 
@@ -161,7 +162,6 @@ class Collector:
 
             dest_file = f"{self.fresh_dir}/{parent_file_name}"
             shutil.move(candidate, dest_file)
-
 
 #
 # argv[1] = configuration filename
