@@ -37,6 +37,6 @@ mkdir -p "${OUTPUT_DIR}"
 
 log "start collector"
 
-"${VDL2_BIN}" --rtlsdr 0 --gain 40 --correction 0 --utc --station-id WOMBAT-SFO-VDL2 --output "${OUTPUT}" "${FREQUENCIES_HZ[@]}"
+"${VDL2_BIN}" --rtlsdr 0 --gain 40 --correction 0 --utc --station-id VDL2-DEV01 --output "${OUTPUT}" "${FREQUENCIES_HZ[@]}"
 
 log "end collector"

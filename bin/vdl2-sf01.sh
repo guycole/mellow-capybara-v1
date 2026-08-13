@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Title: vdl2-dev02.sh
-# Description: vdl2 search group 2
+# Title: vdl2-sf01.sh
+# Description: vdl2 sf collector script
 # Development Environment: Ubuntu 22.04.05 LTS
 # Author: Guy Cole (guycole at gmail dot com)
 #
@@ -21,7 +21,7 @@ OUTPUT_DIR="${OUTPUT_DIR:-/tmp}"
 OUTPUT_FILE="${OUTPUT_FILE:-${OUTPUT_DIR}/vdl2.json}"
 OUTPUT="decoded:json:file:path=${OUTPUT_FILE},rotate=hourly"
 
-FREQUENCIES=(136.325 136.350 136.375 136.400 136.425 136.450 136.475 136.500 136.525)
+FREQUENCIES=(136.100 136.300 136.600 136.650 136.700 136.800 136.975)
 
 FREQUENCIES_HZ=()
 for freq in "${FREQUENCIES[@]}"; do
@@ -37,6 +37,6 @@ mkdir -p "${OUTPUT_DIR}"
 
 log "start collector"
 
-"${VDL2_BIN}" --rtlsdr 0 --gain 40 --correction 0 --utc --station-id VDL2-DEV02 --output "${OUTPUT}" "${FREQUENCIES_HZ[@]}"
+"${VDL2_BIN}" --rtlsdr 0 --gain 40 --correction 0 --utc --station-id VDL2-SFO1 --output "${OUTPUT}" "${FREQUENCIES_HZ[@]}"
 
 log "end collector"
