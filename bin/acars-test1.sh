@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Title: collector.sh
-# Description: drive the collection pass
+# Title: acars-test1.sh
+# Description: original acarsdec test
 # Development Environment: Ubuntu 22.04.05 LTS
 # Author: Guy Cole (guycole at gmail dot com)
 #
