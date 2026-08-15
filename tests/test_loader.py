@@ -18,5 +18,6 @@ class LoaderObservationTests(unittest.TestCase):
         self.assertEqual(normalized["app"]["name"], "acarsdec")
 
 
+
 if __name__ == "__main__":
     unittest.main()

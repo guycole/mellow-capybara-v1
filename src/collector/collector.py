@@ -40,7 +40,6 @@ class Collector:
         self.antenna = args["receiver"]["antenna"]
         self.receiver_id = args["receiver"]["receiverId"]
         self.receiver_mode = args["receiver"]["mode"]
-        self.receiver_project = args["receiver"]["project"]
         self.receiver_task = args["receiver"]["task"]
         self.receiver_type = args["receiver"]["type"]
 
@@ -123,7 +122,7 @@ class Collector:
             },
             "job": {
                 "mode": self.receiver_mode,
-                "project": self.receiver_project,
+                "project": "capybara-v1",
                 "task": self.receiver_task,
             },
             "timeStamp": {
