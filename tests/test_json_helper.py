@@ -36,7 +36,12 @@ class JsonHelperSchemaTests(unittest.TestCase):
             "parentFileName": "acars_20260806_23.json",
             "project": "capybara-v1",
             "version": 1,
-            "observations": [{"acarsdec": {"app": {"name": "acarsdec"}}}],
+            "observations": [
+                {
+                    "uuid": "e8c34696-7f06-4bd5-bf88-7e08a671d059",
+                    "acarsdec": {"app": {"name": "acarsdec"}},
+                }
+            ],
         }
 
         self.assertTrue(self.helper.json_file_writer("/tmp/acars-wrapper.json", payload))
@@ -66,7 +71,12 @@ class JsonHelperSchemaTests(unittest.TestCase):
             "parentFileName": "vdl2_20260807_23.json",
             "project": "capybara-v1",
             "version": 1,
-            "observations": [{"vdl2": {"app": {"name": "dumpvdl2", "ver": "2.6.0"}}}],
+            "observations": [
+                {
+                    "uuid": "e8c34696-7f06-4bd5-bf88-7e08a671d059",
+                    "vdl2": {"app": {"name": "dumpvdl2", "ver": "2.6.0"}},
+                }
+            ],
         }
 
         self.assertTrue(self.helper.json_file_writer("/tmp/vdl2-wrapper.json", payload))
@@ -100,8 +110,14 @@ class JsonHelperSchemaTests(unittest.TestCase):
             "parentFileName": "acars-wrapper.json",
             "version": 1,
             "observations": [
-                '{"equipment": {"antenna": "multicoupler"}}',
-                '{"acarsdec": {"app": {"name": "acarsdec"}}}',
+                {
+                    "uuid": "e8c34696-7f06-4bd5-bf88-7e08a671d059",
+                    "equipment": {"antenna": "multicoupler"},
+                },
+                {
+                    "uuid": "8f5eb298-8b31-4ca8-a90c-3151ac87d2d9",
+                    "acarsdec": {"app": {"name": "acarsdec"}},
+                },
             ],
         }
 
