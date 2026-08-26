@@ -90,7 +90,9 @@ class Collector:
             try:
                 buffer = acars_file.readlines()
                 for row in buffer:
-                    observations.append(json.loads(row))
+                    temp = json.loads(row)
+                    temp["uuid"] = str(uuid.uuid4())
+                    observations.append(temp)
             except Exception as error:
                 logger.exception("file read error: %s", error)
 
