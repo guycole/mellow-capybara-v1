@@ -5,17 +5,17 @@
 -- crate_name is crateName (from json)
 -- file_quantity is total daily files
 -- host_name is from equipment.hostName
--- quantity_adsb is total daily adsb observations
--- quantity_adsb is total daily uat observations
--- score_uat is summary date
+-- quantity_slow is total daily legacy acars observations
+-- quantity_fast is total daily vdl2 acars observations
+-- score_date is summary date
 --
 create table capybara_daily_score (
   id              bigserial    primary key,
   crate_name      varchar(32)  not null,
   file_quantity   integer      not null,
   host_name       varchar(16)  not null,
-  quantity_acars  integer      not null,
-  quantity_vdl2   integer      not null,
+  quantity_slow   integer      not null,
+  quantity_fast   integer      not null,
   score_date      date         not null
 );
 

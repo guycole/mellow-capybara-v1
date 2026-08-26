@@ -34,7 +34,7 @@ class Validator:
         logger.info(f"file failure:{file_name}")
 
         self.failure += 1
-        os.rename(file_name, self.failure_dir + file_name)
+        os.rename(file_name, self.failure_dir + "/" + file_name)
 
     def file_success(self, file_name: str):
         #logger.info(f"file success:{file_name}")
@@ -71,19 +71,19 @@ class Validator:
                 self.postgres.load_log_insert(load_log)
 
                 if "slow" in self.jh.raw_json["job"]["mode"]:
-                    quantity_acars = len(self.jh.raw_json["observations"])
-                    quantity_vdl2 = 0
+                    quantity_slow = len(self.jh.raw_json["observations"])
+                    quantity_fast = 0
                 else:
-                    quantity_acars = 0
-                    quantity_vdl2 = len(self.jh.raw_json["observations"])
+                    quantity_slow = 0
+                    quantity_fast = len(self.jh.raw_json["observations"])
 
                 daily_score = {
                     "crate_name": self.jh.raw_json["crateName"],
                     "file_quantity": 1,
                     "host_name": self.jh.raw_json["equipment"]["hostName"],
                     "obs_quantity": len(self.jh.raw_json["observations"]),
-                    "quantity_acars": quantity_acars,
-                    "quantity_vdl2": quantity_vdl2,
+                    "quantity_slow": quantity_slow,
+                    "quantity_fast": quantity_fast,
                     "score_date": datetime.date.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"][:10]),
                 }
 
@@ -131,7 +131,7 @@ class Validator:
             logger.warning(f"invalid version or project for {file_name}")
             self.file_failure(file_name)
             return
-        
+
         if self.load_log_test(file_name):
             self.file_success(file_name)
         else:
@@ -147,7 +147,7 @@ class Validator:
         for target in targets:
             if target.startswith("acars") or target.startswith("vdl2"):
                 logger.info(f"skipping raw:{target}")
-                # move to success dir
+                self.file_success(target)    
                 continue
 
             self.file_processor(target)

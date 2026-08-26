@@ -72,12 +72,14 @@ class Collector:
                 if target == acars_current:
                     print(f"skipping {target}")
                 else:
+                    print(f"adding {target} to acars")
                     results.append(f"{self.raw_dir}/{target}")
 
             if target.startswith("vdl2"):
                 if target == dumpvdl2_current:
                     print(f"skipping {target}")
                 else:
+                    print(f"adding {target} to vdl2")
                     results.append(f"{self.raw_dir}/{target}")
 
         return results
@@ -108,6 +110,16 @@ class Collector:
             epoch_seconds, tz=zoneinfo.ZoneInfo("UTC")
         )
 
+        # delete me later
+        if parent_file_name.startswith("acars"):
+            self.receiver_mode = "sf1-slow"
+            self.receiver_task = "capybara-v1-sf1-slow"
+
+        # delete me later    
+        if parent_file_name.startswith("vdl2"):
+            self.receiver_mode = "sf1-fast"
+            self.receiver_task = "capybara-v1-sf1-fast"
+
         results = {
             "equipment": {
                 "antenna": self.antenna,
@@ -133,12 +145,15 @@ class Collector:
             },
             "crateName": self.crate_name,
             "fileName": file_name,
-            "parentFileName": parent_file_name,
+#            "parentFileName": parent_file_name,
+#            "parentFileName": str(uuid.uuid4()),
+            "parentFileName": str(uuid.uuid4()),
             "version": 1,
             "observations": observations,
         }
 
         outfile_json = f"{self.fresh_dir}/{file_name}"
+        logger.info(f"writing wrapper to {outfile_json}")
         retflag = JsonHelper().json_file_writer(outfile_json, results)
 
         return retflag
@@ -150,9 +165,7 @@ class Collector:
         logger.info(f"{len(candidates)} files to process")
         for candidate in candidates:
             observations = self.read_observations(candidate)
-            logger.info(
-                f"processing {(candidate)} with {len(observations)} observations"
-            )
+            logger.info(f"processing {(candidate)} with {len(observations)} observations")
 
             parent_file_name = os.path.basename(candidate)
             retflag = self.write_json_wrapper(observations, parent_file_name)

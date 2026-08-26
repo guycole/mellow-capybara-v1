@@ -22,12 +22,13 @@ from sqlalchemy import desc
 
 from helper.sql_table import (
     DailyScore,
+    Frequency,
     GeoLoc,
     LoadLog,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger("hyena")
+logger = logging.getLogger("capybara")
 
 class PostGres:
     db_engine = None
@@ -54,12 +55,38 @@ class PostGres:
                     session.add(candidate)
                 else:
                     existing.file_quantity += candidate.file_quantity
-                    existing.quantity_acars += candidate.quantity_acars
-                    existing.quantity_vdl2 += candidate.quantity_vdl2
+                    existing.quantity_slow += candidate.quantity_slow
+                    existing.quantity_fast += candidate.quantity_fast
 
                 session.commit()
         except Exception as error:
             logger.exception("daily_score_insert_or_update failed: %s", error)
+
+        return candidate
+    
+    def frequency_insert_or_update(self, args: dict[str, any]) -> Frequency:
+        candidate = Frequency(args)
+
+        try:
+            with self.Session() as session:
+                existing = session.scalars(
+                    select(Frequency).filter(
+                        and_(
+                            Frequency.score_date == candidate.score_date,
+                            Frequency.host_name == candidate.host_name,
+                            Frequency.frequency == candidate.frequency,
+                        )
+                    )
+                ).first()
+
+                if existing is None:
+                    session.add(candidate)
+                else:
+                    existing.message_quantity += candidate.message_quantity
+
+                session.commit()
+        except Exception as error:
+            logger.exception("frequency_insert_or_update failed: %s", error)
 
         return candidate
 

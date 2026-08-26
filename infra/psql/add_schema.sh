@@ -14,5 +14,6 @@ export PGUSER=capybara_admin
 #
 psql < daily_score.psql
 psql < geo_loc.psql
+psql < frequency.psql
 psql < load_log.psql
 #

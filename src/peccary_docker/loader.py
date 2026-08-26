@@ -23,9 +23,6 @@ class Loader:
 
         self.failure_dir = os.environ.get("FAILURE_DIR", "/var/peccary/capybara/failure")
         self.fresh_dir = os.environ.get("FRESH_DIR", "/var/peccary/capybara/fresh")
-
-        #temporary
-        self.fresh_dir = os.environ.get("FRESH_DIR", "/var/wombat/fresh/capybara")
  
         self.failure = 0
         self.success = 0
@@ -73,19 +70,19 @@ class Loader:
                 self.postgres.load_log_insert(load_log)
 
                 if "slow" in self.jh.raw_json["job"]["mode"]:
-                    quantity_acars = len(self.jh.raw_json["observations"])
-                    quantity_vdl2 = 0
+                    quantity_slow = len(self.jh.raw_json["observations"])
+                    quantity_fast = 0
                 else:
-                    quantity_acars = 0
-                    quantity_vdl2 = len(self.jh.raw_json["observations"])
+                    quantity_slow = 0
+                    quantity_fast = len(self.jh.raw_json["observations"])
 
                 daily_score = {
                     "crate_name": self.jh.raw_json["crateName"],
                     "file_quantity": 1,
                     "host_name": self.jh.raw_json["equipment"]["hostName"],
                     "obs_quantity": len(self.jh.raw_json["observations"]),
-                    "quantity_acars": quantity_acars,
-                    "quantity_vdl2": quantity_vdl2,
+                    "quantity_slow": quantity_slow,
+                    "quantity_fast": quantity_fast,
                     "score_date": datetime.date.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"][:10]),
                 }
 
@@ -98,6 +95,33 @@ class Loader:
             logger.error(f"postgres insert failed for {file_name}: {error}")
         
         return False
+
+
+    def load_frequency(self, obs: dict[str, any]) -> None:
+        if type(obs) is not dict:
+            logger.error(f"invalid observation type: {type(obs)}")
+            return
+
+        acars_type = "unknown"
+
+        if "fast" in self.jh.raw_json["job"]["mode"]:
+            acars_type = "fast"
+            frequency = obs["vdl2"]["freq"]
+
+        if "slow" in self.jh.raw_json["job"]["mode"]:
+            acars_type = "slow"
+            frequency = int(obs["freq"] * 1000000)
+
+        frequency_obs = {
+            "acars_type": acars_type,
+            "crate_name": self.jh.raw_json["crateName"],
+            "frequency": frequency,
+            "host_name": self.jh.raw_json["equipment"]["hostName"],
+            "message_quantity": 1,
+            "score_date": datetime.date.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"][:10]),
+        }
+
+        self.postgres.frequency_insert_or_update(frequency_obs)
 
     def load_obs(self, obs: dict[str, any]) -> None:
         if type(obs) is not dict:
@@ -157,7 +181,9 @@ class Loader:
             print(len(self.jh.raw_json["observations"]))
 
             for obs in self.jh.raw_json["observations"]:
-                self.load_obs(obs)
+                self.load_frequency(obs)
+
+#                self.load_obs(obs)
 
 #            self.file_success(file_name)
         else:
