@@ -123,6 +123,82 @@ class JsonHelperSchemaTests(unittest.TestCase):
 
         self.assertTrue(self.helper.json_file_writer("/tmp/hybrid-wrapper.json", payload))
 
+    def test_rejects_missing_parent_file_name(self) -> None:
+        payload = {
+            "equipment": {
+                "antenna": "multicoupler",
+                "receiverId": 11,
+                "receiverType": "rtl-sdr-v3",
+                "hostName": "c4g",
+                "hostType": "odroid c4",
+            },
+            "geoLoc": {
+                "altitude": 0,
+                "latitude": 38.108,
+                "longitude": -122.268,
+                "siteName": "vallejo01",
+            },
+            "job": {
+                "mode": "default",
+                "project": "capybara-v1",
+                "task": "capybara-v1-sf1-fast",
+            },
+            "timeStamp": {
+                "epochSeconds": 1786324005,
+                "iso8601": "2026-08-10T01:06:45+00:00",
+            },
+            "crateName": "wombat04",
+            "fileName": "e513bb78-2691-4a76-8fa2-dd4e2e15b7c4.json",
+            "version": 1,
+            "observations": [
+                {
+                    "uuid": "e8c34696-7f06-4bd5-bf88-7e08a671d059",
+                    "vdl2": {"app": {"name": "dumpvdl2", "ver": "2.6.0"}},
+                }
+            ],
+        }
+
+        self.assertFalse(
+            self.helper.json_file_writer("/tmp/missing-parent-file-name.json", payload)
+        )
+
+    def test_accepts_string_observations(self) -> None:
+        payload = {
+            "equipment": {
+                "antenna": "multicoupler",
+                "receiverId": 11,
+                "receiverType": "rtl-sdr-v3",
+                "hostName": "c4g",
+                "hostType": "odroid c4",
+            },
+            "geoLoc": {
+                "altitude": 0,
+                "latitude": 38.108,
+                "longitude": -122.268,
+                "siteName": "vallejo01",
+            },
+            "job": {
+                "mode": "default",
+                "project": "capybara-v1",
+                "task": "capybara-v1-sf1-fast",
+            },
+            "timeStamp": {
+                "epochSeconds": 1786324005,
+                "iso8601": "2026-08-10T01:06:45+00:00",
+            },
+            "crateName": "wombat04",
+            "fileName": "e513bb78-2691-4a76-8fa2-dd4e2e15b7c4.json",
+            "parentFileName": "vdl2_20260809_11.json",
+            "version": 1,
+            "observations": [
+                '{"vdl2":{"app":{"name":"dumpvdl2","ver":"2.6.0"}}}'
+            ],
+        }
+
+        self.assertTrue(
+            self.helper.json_file_writer("/tmp/string-observations-wrapper.json", payload)
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

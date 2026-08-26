@@ -56,17 +56,7 @@ schema = {
         "version": {"type": "number"},
         "observations": {
             "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "uuid": {
-                        "type": "string",
-                        "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
-                    },
-                },
-                "required": ["uuid"],
-                "additionalProperties": True,
-            },
+            "items": {},
         },
         "job": {
             "type": "object",
@@ -85,7 +75,7 @@ schema = {
             "required": ["crate", "fileName", "mode", "parentFileName", "project", "version", "observations"],
         },
         {
-            "required": ["job", "crateName", "fileName", "version", "observations"],
+            "required": ["job", "crateName", "fileName", "parentFileName", "version", "observations"],
         },
     ],
     "additionalProperties": False,

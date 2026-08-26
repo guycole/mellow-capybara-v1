@@ -1,0 +1,28 @@
+--
+-- Title: frequency.psql
+-- Description: daily frequency summary
+--
+-- acars_type is slow or fast
+-- crate_name is crateName (from json)
+-- frequency is observed intercept frequency in hz
+-- host_name is from equipment.hostName
+-- message_quantity daily message count for frequency
+-- file_quantity is total daily files
+-- quantity_slow is total daily legacy acars observations
+-- quantity_fast is total daily vdl2 acars observations
+-- score_date is summary date
+--
+create table capybara_frequency (
+  id                bigserial    primary key,
+  acars_type        varchar(16)  not null,
+  crate_name        varchar(32)  not null,
+  frequency         integer      not null,
+  host_name         varchar(16)  not null,
+  message_quantity  integer      not null,
+  score_date        date         not null
+);
+
+grant select, insert, update, delete on capybara_frequency to capybara_client;
+grant usage, select on sequence capybara_frequency_id_seq to capybara_client;
+
+create unique index capybara_freq_ndx1 on capybara_daily_score(crate_name, host_name, score_date);

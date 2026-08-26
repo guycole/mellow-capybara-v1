@@ -25,20 +25,42 @@ class DailyScore(Base):
     crate_name = Column(String)
     file_quantity = Column(Integer)
     host_name = Column(String)
-    quantity_acars = Column(Integer)
-    quantity_vdl2 = Column(Integer)
+    quantity_slow = Column(Integer)
+    quantity_fast = Column(Integer)
     score_date = Column(Date)
 
     def __init__(self, args: dict[str, any]):
         self.crate_name = args["crate_name"]
         self.file_quantity = args["file_quantity"]
         self.host_name = args["host_name"]
-        self.quantity_acars = args["quantity_acars"]
-        self.quantity_vdl2 = args["quantity_vdl2"]
+        self.quantity_slow = args["quantity_slow"]
+        self.quantity_fast = args["quantity_fast"]
         self.score_date = args["score_date"]
 
     def __repr__(self):
         return f"daily_score({self.score_date} {self.host_name})"
+
+class Frequency(Base):
+    __tablename__ = "capybara_frequency"
+
+    id = Column(BigInteger, primary_key=True)
+    acars_type = Column(String(16), nullable=False)
+    crate_name = Column(String(32), nullable=False)
+    frequency = Column(Integer, nullable=False)
+    host_name = Column(String(16), nullable=False)
+    message_quantity = Column(Integer, nullable=False)
+    score_date = Column(Date, nullable=False)
+
+    def __init__(self, args: dict[str, any]):
+        self.acars_type = args["acars_type"]
+        self.crate_name = args["crate_name"]
+        self.frequency = args["frequency"]
+        self.host_name = args["host_name"]
+        self.message_quantity = args["message_quantity"]
+        self.score_date = args["score_date"]
+
+    def __repr__(self):
+        return f"frequency({self.score_date} {self.host_name})"
 
 class GeoLoc(Base):
     __tablename__ = "capybara_geo_loc"
