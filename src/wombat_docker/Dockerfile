@@ -36,12 +36,12 @@ ENV VIRTUAL_ENV=/app/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Copy requirements and install them inside the venv
-COPY requirements.txt ./
+COPY wombat_docker/requirements.txt ./
 RUN $VIRTUAL_ENV/bin/pip install --no-cache-dir -r requirements.txt
 
 COPY helper/ ./helper/
-COPY capybara_app.py ./
-COPY validator.py ./
+COPY wombat_docker/capybara_app.py ./
+COPY wombat_docker/validator.py ./
 
 RUN printf '%s\n' '#!/bin/sh' 'set -e' '/usr/local/bin/collect-wombat-ids.sh' 'set -a' '[ -f /app/wombat_env.env ] && . /app/wombat_env.env' 'set +a' 'exec "$@"' > /usr/local/bin/docker-entrypoint.sh \
 	&& chmod +x /usr/local/bin/docker-entrypoint.sh
