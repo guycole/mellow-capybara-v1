@@ -21,19 +21,19 @@ echo "start archiver"
 #
 cd ${WORK_DIR}
 #
-mv ${SUCCESS_DIR} ${SOURCE_DIR}
-mkdir ${SUCCESS_DIR}
+mv "${WORK_DIR}/${SUCCESS_DIR}" "${WORK_DIR}/${SOURCE_DIR}"
+mkdir "${WORK_DIR}/${SUCCESS_DIR}"
 #
 # archive everything
 tar -cvzf "${ARCHIVE_DIR}/${FILE_NAME}" ${SOURCE_DIR}
 #
 # export only collector files
-rm "${SOURCE_DIR}/acars*.json"
-rm "${SOURCE_DIR}/vdl2*.json"
-tar -cvzf "${EXPORT_DIR}/${FILE_NAME}" ${SOURCE_DIR}/*.json
+rm -f "${WORK_DIR}/${SOURCE_DIR}"/acars*.json
+rm -f "${WORK_DIR}/${SOURCE_DIR}"/vdl2*.json
+tar -cvzf "${WORK_DIR}/${EXPORT_DIR}/${FILE_NAME}" ${SOURCE_DIR}
 #
 echo "cleanup"
-rm -rf ${SOURCE_DIR}
+rm -rf ${WORK_DIR}/${SOURCE_DIR}
 #
 echo "end archiver"
 #
