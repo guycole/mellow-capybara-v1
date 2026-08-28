@@ -17,7 +17,5 @@ echo "start validate"
 #
 docker rm ${CONTAINER1};docker run -e WOMBAT_UID=${WOMBAT_UID} -e WOMBAT_GID=${WOMBAT_GID} -v /var/wombat:/mnt/wombat --name ${CONTAINER1} ${IMAGE}
 #
-docker rm ${CONTAINER1};docker run -e stuntbox=koala -v /var/wombat:/mnt/wombat --name ${CONTAINER1} ${IMAGE}
-#
 echo "end validate"
 #
