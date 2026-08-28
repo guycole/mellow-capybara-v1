@@ -146,6 +146,8 @@ class BootBoy:
             service_name = "vdl2-dev03.service"
         elif task == "capybara-v1-dev4-fast":
             service_name = "vdl2-dev04.service"
+        elif task == "capybara-v1-sf1-fast":
+            service_name = "vdl2-sf01.service"
         else:
             print(f"BootBoy: unknown task {task} for {target}")
 
