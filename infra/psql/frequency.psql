@@ -15,11 +15,11 @@ create table capybara_frequency (
   frequency         integer      not null,
   host_name         varchar(16)  not null,
   message_quantity  integer      not null,
-  mode              varchar(16)  not null,
+  mode              varchar(32)  not null,
   score_date        date         not null
 );
 
 grant select, insert, update, delete on capybara_frequency to capybara_client;
 grant usage, select on sequence capybara_frequency_id_seq to capybara_client;
 
-create unique index capybara_freq_ndx1 on capybara_daily_score(crate_name, host_name, mode, score_date);
+create unique index capybara_freq_ndx1 on capybara_frequency(crate_name, host_name, mode, score_date);
