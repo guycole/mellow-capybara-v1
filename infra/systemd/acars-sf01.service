@@ -5,7 +5,8 @@ Description=acars-sf01
 After=multi-user.target
 
 [Service]
-User=root
+User=wombat
+Group=wombat
 ExecStart=/home/wombat/github/mellow-capybara-v1/bin/acars-sf01.sh
 StandardOutput=null
 Restart=no

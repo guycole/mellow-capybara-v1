@@ -5,7 +5,8 @@ Description=vdl2-sf01
 After=multi-user.target
 
 [Service]
-User=root
+User=wombat
+Group=wombat
 ExecStart=/home/wombat/github/mellow-capybara-v1/bin/vdl2-sf01.sh
 StandardOutput=null
 Restart=no
