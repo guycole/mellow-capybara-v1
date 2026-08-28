@@ -75,6 +75,7 @@ class PostGres:
                             Frequency.score_date == candidate.score_date,
                             Frequency.host_name == candidate.host_name,
                             Frequency.frequency == candidate.frequency,
+                            Frequency.mode == candidate.mode,
                         )
                     )
                 ).first()

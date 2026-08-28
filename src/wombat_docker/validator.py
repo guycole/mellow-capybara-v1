@@ -42,6 +42,30 @@ class Validator:
         self.success += 1
         os.rename(file_name, self.success_dir + "/" + file_name)
 
+    def load_frequency(self, obs: dict[str, any]) -> None:
+        if type(obs) is not dict:
+            logger.error(f"invalid observation type: {type(obs)}")
+            return
+
+        acars_type = "unknown"
+
+        if "fast" in self.jh.raw_json["job"]["mode"]:
+            frequency = obs["vdl2"]["freq"]
+
+        if "slow" in self.jh.raw_json["job"]["mode"]:
+            frequency = int(obs["freq"] * 1000000)
+
+        frequency_obs = {
+            "crate_name": self.jh.raw_json["crateName"],
+            "frequency": frequency,
+            "host_name": self.jh.raw_json["equipment"]["hostName"],
+            "message_quantity": 1,
+            "mode": self.jh.raw_json["job"]["mode"],
+            "score_date": datetime.date.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"][:10]),
+        }
+
+        self.postgres.frequency_insert_or_update(frequency_obs)
+
     def load_log_test(self, file_name: str) -> bool:
         try:
             candidate = self.postgres.load_log_select_by_file_name(file_name)
@@ -88,6 +112,9 @@ class Validator:
                 }
 
                 self.postgres.daily_score_insert_or_update(daily_score)
+
+                for obs in self.jh.raw_json["observations"]:
+                    self.load_frequency(obs)
 
                 if len(self.jh.raw_json["observations"]) < 1:
                     logger.info("skipping file with no observations")
