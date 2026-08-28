@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Title: docker_build.sh
+# Title: docker-build.sh
 # Description: build capybara Docker image — Linux hosts only
 # Development Environment: Ubuntu 22.04.05 LTS
 # Author: Guy Cole (guycole at gmail dot com)
@@ -22,13 +22,22 @@ fi
 #
 echo "building capybara:latest with WOMBAT_UID=${WOMBAT_UID} WOMBAT_GID=${WOMBAT_GID}"
 #
-SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+
+DOCKER_PLATFORM=""
+case "$(uname -m)" in
+    aarch64|arm64)
+        DOCKER_PLATFORM="--platform linux/arm64"
+        ;;
+esac
 #
 docker build \
     --build-arg WOMBAT_UID="${WOMBAT_UID}" \
     --build-arg WOMBAT_GID="${WOMBAT_GID}" \
+    ${DOCKER_PLATFORM} \
     -t capybara:latest \
-    "${SCRIPT_DIR}/src/wombat_docker"
+    -f "${REPO_ROOT}/src/peccary_docker/Dockerfile" \
+    "${REPO_ROOT}/src"
 #
 echo "done"
 #
