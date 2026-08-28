@@ -1,7 +1,7 @@
-# /etc/systemd/system/acars-dev10.service
+# /etc/systemd/system/acars-sf01.service
 
 [Unit]
-Description=acars-dev10
+Description=acars-sf01
 After=multi-user.target
 
 [Service]
@@ -10,5 +10,5 @@ ExecStart=/home/wombat/github/mellow-capybara-v1/bin/acars-sf01.sh
 StandardOutput=null
 Restart=no
 
-# No [Install] section — acars-dev10 is not auto-started at boot.
-# It is started on-demand by bootboy.py via 'systemctl start acars-dev10.service'.
+# No [Install] section — acars-sf01 is not auto-started at boot.
+# It is started on-demand by bootboy.py via 'systemctl start acars-sf01.service'.
