@@ -23,8 +23,8 @@ OUTPUT="json:file:path=${OUTPUT_FILE},rotate=hourly"
 
 FREQUENCIES=(129.125 129.350 130.025 130.450 131.125 131.475 131.550)
 
-min_freq=$(printf '%s' "${FREQUENCIES[@]}" | sort -n | head -n1)
-max_freq=$(printf '%s' "${FREQUENCIES[@]}" | sort -n | tail -n1)
+min_freq=$(printf '%s\n' "${FREQUENCIES[@]}" | sort -n | head -n1)
+max_freq=$(printf '%s\n' "${FREQUENCIES[@]}" | sort -n | tail -n1)
 CENTER_FREQUENCY=$(awk -v min="$min_freq" -v max="$max_freq" 'BEGIN { print (min + max) / 2.0 }')
 
 if [[ -z "${ACARSDEC_BIN}" ]]; then
