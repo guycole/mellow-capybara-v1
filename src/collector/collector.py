@@ -145,9 +145,7 @@ class Collector:
             },
             "crateName": self.crate_name,
             "fileName": file_name,
-#            "parentFileName": parent_file_name,
-#            "parentFileName": str(uuid.uuid4()),
-            "parentFileName": str(uuid.uuid4()),
+            "parentFileName": parent_file_name,
             "version": 1,
             "observations": observations,
         }

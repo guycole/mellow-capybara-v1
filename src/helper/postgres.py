@@ -72,9 +72,9 @@ class PostGres:
                 existing = session.scalars(
                     select(Frequency).filter(
                         and_(
+                            Frequency.crate_name == candidate.crate_name,
                             Frequency.score_date == candidate.score_date,
                             Frequency.host_name == candidate.host_name,
-                            Frequency.frequency == candidate.frequency,
                             Frequency.mode == candidate.mode,
                         )
                     )
@@ -83,6 +83,7 @@ class PostGres:
                 if existing is None:
                     session.add(candidate)
                 else:
+                    # Keep the current daily row and only advance the counter.
                     existing.message_quantity += candidate.message_quantity
 
                 session.commit()

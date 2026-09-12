@@ -47,13 +47,21 @@ class Validator:
             logger.error(f"invalid observation type: {type(obs)}")
             return
 
-        acars_type = "unknown"
+        frequency = None
 
-        if "fast" in self.jh.raw_json["job"]["mode"]:
-            frequency = obs["vdl2"]["freq"]
+        # Observations can carry frequency as VDL2 Hz or ACARS MHz.
+        if "vdl2" in obs and type(obs["vdl2"]) is dict and "freq" in obs["vdl2"]:
+            frequency = int(obs["vdl2"]["freq"])
+        elif "freq" in obs:
+            raw_freq = obs["freq"]
+            frequency = int(raw_freq * 1000000) if raw_freq < 1000000 else int(raw_freq)
+        elif "frequency" in obs:
+            raw_freq = obs["frequency"]
+            frequency = int(raw_freq * 1000000) if raw_freq < 1000000 else int(raw_freq)
 
-        if "slow" in self.jh.raw_json["job"]["mode"]:
-            frequency = int(obs["freq"] * 1000000)
+        if frequency is None:
+            logger.warning("skipping observation with no frequency field")
+            return
 
         frequency_obs = {
             "crate_name": self.jh.raw_json["crateName"],
