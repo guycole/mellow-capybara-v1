@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Title: wombat-to-s3.sh
-# Description: copy hyena files to s3 then move to archive
+# Description: copy capybara files to s3 then move to archive
 # Development Environment: Ubuntu 22.04.05 LTS
 # Author: Guy Cole (guycole at gmail dot com)
 #
@@ -12,7 +12,7 @@ HOST_NAME=$(hostname)
 #
 ARCHIVE_DIR="archive"
 EXPORT_DIR="export"
-WORK_DIR="/var/wombat/hyena"
+WORK_DIR="/var/wombat/capybara"
 #
 DEST_BUCKET=s3://mellow-capybara-uw2-g5656.braingang.net/fresh/
 #
