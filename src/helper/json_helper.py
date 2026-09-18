@@ -18,13 +18,10 @@ schema = {
         "equipment": {
             "type": "object",
             "properties": {
-                "antenna": {"type": "string"},
-                "receiverId": {"type": "number"},
-                "receiverType": {"type": "string"},
                 "hostName": {"type": "string"},
                 "hostType": {"type": "string"},
             },
-            "required": ["antenna", "receiverId", "receiverType", "hostName", "hostType"],
+            "required": ["hostName", "hostType"],
             "additionalProperties": False,
         },
         "geoLoc": {
@@ -47,16 +44,24 @@ schema = {
             "required": ["epochSeconds", "iso8601"],
             "additionalProperties": False,
         },
-        "crate": {"type": "string"},
         "crateName": {"type": "string"},
         "fileName": {"type": "string"},
-        "mode": {"type": "string"},
-        "parentFileName": {"type": "string"},
-        "project": {"type": "string"},
+        "sourceFileName": {"type": "string"},
         "version": {"type": "number"},
         "observations": {
             "type": "array",
             "items": {},
+        },
+        "receiver": {
+            "type": "object",
+            "properties": {
+                "antenna": {"type": "string"},
+                "receiverId": {"type": "number"},
+                "task": {"type": "string"},
+                "type": {"type": "string"},
+            },
+            "required": ["antenna", "receiverId", "task", "type"],
+            "additionalProperties": False,
         },
         "job": {
             "type": "object",
@@ -69,14 +74,24 @@ schema = {
             "additionalProperties": False,
         },
     },
-    "required": ["equipment", "geoLoc", "timeStamp"],
-    "anyOf": [
+    "required": [
+        "crateName",
+        "fileName",
+        "sourceFileName",
+        "version",
+        "equipment",
+        "geoLoc",
+        "job",
+        "receiver",
+        "timeStamp",
+        "observations",
+    ],
+    "allOf": [
         {
-            "required": ["crate", "fileName", "mode", "parentFileName", "project", "version", "observations"],
-        },
-        {
-            "required": ["job", "crateName", "fileName", "parentFileName", "version", "observations"],
-        },
+            "properties": {
+                "version": {"const": 2},
+            }
+        }
     ],
     "additionalProperties": False,
 }
