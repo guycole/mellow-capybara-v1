@@ -8,3 +8,30 @@ systemd service scripts run bash scripts so collection can run
 bootboy creates config.yaml and starts systemd script
 crontab runs collection
 
+capybara=> select distinct frequency from capybara_frequency where mode = 'sf1-slow';
+ frequency 
+-----------
+ 130025000
+ 131550000
+ 131125000
+(3 rows)
+
+        yyy             xxx     yyy     xxx             xxx
+130.338 129.125 129.350 130.025 130.450 131.125 131.125 131.550
+
+capybara=> select distinct frequency from capybara_frequency where mode = 'sf1-fast';
+ frequency 
+-----------
+ 136650000
+ 136975000
+(2 rows)
+
+                                     yyy                     yyy
+                             xxx     xxx     new     xxx     xxx 
+FREQUENCIES=(136.100 136.300 136.600 136.650 136.750 136.800 136.975)
+
+136.975 MHz — worldwide common signaling channel; start here  
+136.650 MHz — ARINC on-airport VDL2  
+136.800 MHz — SITA on-airport VDL2  
+136.600 MHz — ARINC en-route VDL2  
+136.750 MHz — SITA en-route VDL2

@@ -21,7 +21,8 @@ OUTPUT_DIR="${OUTPUT_DIR:-/tmp}"
 OUTPUT_FILE="${OUTPUT_FILE:-${OUTPUT_DIR}/acars.json}"
 OUTPUT="json:file:path=${OUTPUT_FILE},rotate=hourly"
 
-FREQUENCIES=(129.125 129.350 130.025 130.450 131.125 131.475 131.550)
+# FREQUENCIES=(129.125 129.350 130.025 130.450 131.125 131.475 131.550)
+FREQUENCIES=(129.125 129.350 130.025 130.450 131.125 131.125 131.550)
 
 min_freq=$(printf '%s\n' "${FREQUENCIES[@]}" | sort -n | head -n1)
 max_freq=$(printf '%s\n' "${FREQUENCIES[@]}" | sort -n | tail -n1)
