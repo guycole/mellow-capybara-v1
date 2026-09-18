@@ -8,13 +8,13 @@ import datetime
 import json
 import logging
 import os
+import pydantic
 import shutil
 import sys
 import time
 import uuid
 import zoneinfo
-
-from helper.json_helper import JsonHelper
+from typing import Any
 
 import yaml
 from yaml.loader import SafeLoader
@@ -22,30 +22,69 @@ from yaml.loader import SafeLoader
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("capybara")
 
+class Equipment(pydantic.BaseModel):
+    hostName: str
+    hostType: str
+
+class GeoLoc(pydantic.BaseModel):
+    altitude: float
+    latitude: float
+    longitude: float
+    siteName: str
+
+class Job(pydantic.BaseModel):
+    mode: str
+    project: str
+    task: str
+
+class Receiver(pydantic.BaseModel):
+    antenna: str
+    receiverId: int
+    task: str
+    type: str
+
+class TimeStamp(pydantic.BaseModel):
+    epochSeconds: int = pydantic.Field(default_factory=lambda: int(time.time()))
+    iso8601: str = ""
+
+    @pydantic.model_validator(mode="after")
+    def sync_iso8601_from_epoch(self) -> "TimeStamp":
+        self.iso8601 = datetime.datetime.fromtimestamp(
+            self.epochSeconds, tz=zoneinfo.ZoneInfo("UTC")
+        ).isoformat()
+        return self
+
+class CapybaraModel(pydantic.BaseModel):
+    crateName: str
+    fileName: str
+    sourceFileName: str
+    version: int = 2
+    equipment: Equipment
+    geoLoc: GeoLoc
+    job: Job
+    receiver: Receiver
+    timeStamp: TimeStamp
+    observations: list[dict[str, Any]]
 
 class Collector:
 
     def __init__(self, args: dict[str, any]):
         self.crate_name = args["crateName"]
         self.fresh_dir = args["freshDir"]
-
-        self.host_name = args["equipment"]["hostName"]
-        self.host_type = args["equipment"]["hostType"]
-
-        self.altitude = args["geoLoc"]["altitude"]
-        self.latitude = args["geoLoc"]["latitude"]
-        self.longitude = args["geoLoc"]["longitude"]
-        self.site_name = args["geoLoc"]["siteName"]
-
-        self.antenna = args["receiver"]["antenna"]
-        self.receiver_id = args["receiver"]["receiverId"]
-        self.receiver_mode = args["receiver"]["mode"]
-        self.receiver_task = args["receiver"]["task"]
-        self.receiver_type = args["receiver"]["type"]
-
         self.raw_dir = args["rawDir"]
 
-        self.jh = JsonHelper()
+        self.equipment = Equipment(**args["equipment"])
+        self.geo_loc = GeoLoc(**args["geoLoc"])
+        self.receiver = Receiver(**args["receiver"])
+
+        # capybara-v1-sf1-slow
+        task = args["receiver"]["task"]
+        tokens = task.split("-")
+        mode = "-".join(tokens[2:])
+        project = "-".join(tokens[:-2])
+        self.job = Job(mode=mode, project=project, task=task)
+
+        self.time_stamp = TimeStamp()
 
     def file_discovery(self):
         gmt_now = datetime.datetime.now(datetime.timezone.utc)
@@ -101,78 +140,44 @@ class Collector:
         return observations
 
     def write_json_wrapper(
-        self, observations: list[str], parent_file_name: str
+        self, observations: list[str], source_file_name: str
     ) -> bool:
         file_name = f"{str(uuid.uuid4())}.json"
 
-        epoch_seconds = int(time.time())
-        dt_object_utc = datetime.datetime.fromtimestamp(
-            epoch_seconds, tz=zoneinfo.ZoneInfo("UTC")
+        capybara_model = CapybaraModel(
+            crateName = self.crate_name,
+            fileName = file_name,
+            sourceFileName = source_file_name,
+            equipment = self.equipment,
+            geoLoc = self.geo_loc,
+            job = self.job,
+            receiver = self.receiver,
+            timeStamp = self.time_stamp,
+            observations = observations
         )
 
-        # delete me later
-        if parent_file_name.startswith("acars"):
-            self.receiver_mode = "sf1-slow"
-            self.receiver_task = "capybara-v1-sf1-slow"
-
-        # delete me later    
-        if parent_file_name.startswith("vdl2"):
-            self.receiver_mode = "sf1-fast"
-            self.receiver_task = "capybara-v1-sf1-fast"
-
-        results = {
-            "equipment": {
-                "antenna": self.antenna,
-                "receiverId": self.receiver_id,
-                "receiverType": self.receiver_type,
-                "hostName": self.host_name,
-                "hostType": self.host_type,
-            },
-            "geoLoc": {
-                "altitude": self.altitude,
-                "latitude": self.latitude,
-                "longitude": self.longitude,
-                "siteName": self.site_name,
-            },
-            "job": {
-                "mode": self.receiver_mode,
-                "project": "capybara-v1",
-                "task": self.receiver_task,
-            },
-            "timeStamp": {
-                "epochSeconds": epoch_seconds,
-                "iso8601": dt_object_utc.isoformat(),
-            },
-            "crateName": self.crate_name,
-            "fileName": file_name,
-            "parentFileName": parent_file_name,
-            "version": 1,
-            "observations": observations,
-        }
-
         outfile_json = f"{self.fresh_dir}/{file_name}"
-        logger.info(f"writing wrapper to {outfile_json}")
-        retflag = JsonHelper().json_file_writer(outfile_json, results)
+        with open(outfile_json, "w", encoding="utf-8") as out_file:
+            out_file.write(capybara_model.model_dump_json(indent=4))
 
-        return retflag
+        return 0
 
     def execute(self) -> None:
-        logger.info(f"collector execute: {self.receiver_task}")
+        logger.info(f"collector execute")
 
         candidates = self.file_discovery()
         logger.info(f"{len(candidates)} files to process")
+
         for candidate in candidates:
             observations = self.read_observations(candidate)
-            logger.info(f"processing {(candidate)} with {len(observations)} observations")
-
-            parent_file_name = os.path.basename(candidate)
-            retflag = self.write_json_wrapper(observations, parent_file_name)
-            if retflag:
-                logger.info(f"successfully wrote wrapper for {parent_file_name}")
+            source_file_name = os.path.basename(candidate)
+            retflag = self.write_json_wrapper(observations, source_file_name)
+            if retflag == 0:
+                logger.info(f"successfully wrote wrapper for {source_file_name}")
             else:
-                logger.error(f"failed to write wrapper for {parent_file_name}")
+                logger.error(f"failed to write wrapper for {source_file_name}")
 
-            dest_file = f"{self.fresh_dir}/{parent_file_name}"
+            dest_file = f"{self.fresh_dir}/{source_file_name}"
             shutil.move(candidate, dest_file)
 
 #
