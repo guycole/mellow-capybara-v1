@@ -177,7 +177,7 @@ class Collector:
             else:
                 logger.error(f"failed to write wrapper for {source_file_name}")
 
-            dest_file = f"{self.fresh_dir}/{sourced_file_name}"
+            dest_file = f"{self.fresh_dir}/{source_file_name}"
             shutil.move(candidate, dest_file)
 
 #
