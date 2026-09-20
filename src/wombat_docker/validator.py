@@ -6,10 +6,9 @@
 #
 import logging
 import datetime
-import json
 import os
 
-from helper.json_helper import JsonHelper, schema
+from helper.json_helper import JsonHelper
 
 from helper.postgres import PostGres
 
@@ -29,6 +28,87 @@ class Validator:
         self.success = 0
 
         self.jh = JsonHelper()
+
+    def validate_v2_payload(self, payload: dict[str, any], file_name: str) -> bool:
+        if not isinstance(payload, dict):
+            logger.warning(f"payload is not dict for {file_name}")
+            return False
+
+        required_top = [
+            "crateName",
+            "fileName",
+            "sourceFileName",
+            "version",
+            "equipment",
+            "geoLoc",
+            "job",
+            "receiver",
+            "timeStamp",
+            "observations",
+        ]
+        for key in required_top:
+            if key not in payload:
+                logger.warning(f"missing required key '{key}' for {file_name}")
+                return False
+
+        if payload["version"] != 2:
+            logger.warning(f"invalid version for {file_name}: {payload['version']}")
+            return False
+
+        if payload["fileName"] != file_name:
+            logger.warning(f"mismatched file name: {payload['fileName']} vs {file_name}")
+            return False
+
+        equipment = payload["equipment"]
+        if not isinstance(equipment, dict) or "hostName" not in equipment or "hostType" not in equipment:
+            logger.warning(f"invalid equipment payload for {file_name}")
+            return False
+
+        geo_loc = payload["geoLoc"]
+        if not isinstance(geo_loc, dict):
+            logger.warning(f"invalid geoLoc payload for {file_name}")
+            return False
+        for key in ["altitude", "latitude", "longitude", "siteName"]:
+            if key not in geo_loc:
+                logger.warning(f"missing geoLoc.{key} for {file_name}")
+                return False
+
+        job = payload["job"]
+        if not isinstance(job, dict):
+            logger.warning(f"invalid job payload for {file_name}")
+            return False
+        for key in ["mode", "project", "task"]:
+            if key not in job:
+                logger.warning(f"missing job.{key} for {file_name}")
+                return False
+
+        receiver = payload["receiver"]
+        if not isinstance(receiver, dict):
+            logger.warning(f"invalid receiver payload for {file_name}")
+            return False
+        for key in ["antenna", "receiverId", "task", "type"]:
+            if key not in receiver:
+                logger.warning(f"missing receiver.{key} for {file_name}")
+                return False
+
+        time_stamp = payload["timeStamp"]
+        if not isinstance(time_stamp, dict):
+            logger.warning(f"invalid timeStamp payload for {file_name}")
+            return False
+        for key in ["epochSeconds", "iso8601"]:
+            if key not in time_stamp:
+                logger.warning(f"missing timeStamp.{key} for {file_name}")
+                return False
+
+        if not isinstance(payload["observations"], list):
+            logger.warning(f"observations is not list for {file_name}")
+            return False
+
+        if job["project"] != "capybara-v1":
+            logger.warning(f"invalid project for {file_name}: {job['project']}")
+            return False
+
+        return True
 
     def file_failure(self, file_name: str):
         logger.info(f"file failure:{file_name}")
@@ -95,7 +175,7 @@ class Validator:
                     "mode": self.jh.raw_json["job"]["mode"],
                     "obs_quantity": len(self.jh.raw_json["observations"]),
                     "obs_time": self.jh.raw_json["timeStamp"]["iso8601"],
-                    "parent_file_name": self.jh.raw_json["parentFileName"],
+                    "parent_file_name": self.jh.raw_json["sourceFileName"],
                     "site_name": self.jh.raw_json["geoLoc"]["siteName"],
                     "task": self.jh.raw_json["job"]["task"],
                 }
@@ -145,7 +225,7 @@ class Validator:
             self.file_failure(file_name)
             return
 
-        if not self.jh.json_file_reader(file_name, True):
+        if not self.jh.json_file_reader(file_name, False):
             logger.warning(f"file read failed for {file_name}")
             self.file_failure(file_name)
             return
@@ -155,15 +235,7 @@ class Validator:
             self.file_failure(file_name)
             return
 
-        if self.jh.raw_json["fileName"] != file_name:
-            logger.warning(f"mismatched file name: {self.jh.raw_json['fileName']} vs {file_name}")
-            self.file_failure(file_name)
-            return
-
-        if (self.jh.raw_json["version"] == 1 and self.jh.raw_json["job"]["project"] == "capybara-v1"):
-            pass
-        else:
-            logger.warning(f"invalid version or project for {file_name}")
+        if not self.validate_v2_payload(self.jh.raw_json, file_name):
             self.file_failure(file_name)
             return
 

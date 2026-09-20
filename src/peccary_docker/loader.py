@@ -6,10 +6,9 @@
 #
 import logging
 import datetime
-import json
 import os
 
-from helper.json_helper import JsonHelper, schema
+from helper.json_helper import JsonHelper
 
 from helper.postgres import PostGres
 
@@ -28,6 +27,55 @@ class Loader:
         self.success = 0
 
         self.jh = JsonHelper()
+
+    def validate_v2_payload(self, payload: dict[str, any], file_name: str) -> bool:
+        if not isinstance(payload, dict):
+            logger.warning(f"payload is not dict for {file_name}")
+            return False
+
+        required_top = [
+            "crateName",
+            "fileName",
+            "sourceFileName",
+            "version",
+            "equipment",
+            "geoLoc",
+            "job",
+            "receiver",
+            "timeStamp",
+            "observations",
+        ]
+        for key in required_top:
+            if key not in payload:
+                logger.warning(f"missing required key '{key}' for {file_name}")
+                return False
+
+        if payload["version"] != 2:
+            logger.warning(f"invalid version for {file_name}: {payload['version']}")
+            return False
+
+        if payload["fileName"] != file_name:
+            logger.warning(f"mismatched file name: {payload['fileName']} vs {file_name}")
+            return False
+
+        job = payload["job"]
+        if not isinstance(job, dict):
+            logger.warning(f"invalid job payload for {file_name}")
+            return False
+        for key in ["mode", "project", "task"]:
+            if key not in job:
+                logger.warning(f"missing job.{key} for {file_name}")
+                return False
+
+        if job["project"] != "capybara-v1":
+            logger.warning(f"invalid project for {file_name}: {job['project']}")
+            return False
+
+        if not isinstance(payload["observations"], list):
+            logger.warning(f"observations is not list for {file_name}")
+            return False
+
+        return True
 
     def file_failure(self, file_name: str):
         logger.info(f"file failure:{file_name}")
@@ -62,7 +110,7 @@ class Loader:
                     "mode": self.jh.raw_json["job"]["mode"],
                     "obs_quantity": len(self.jh.raw_json["observations"]),
                     "obs_time": self.jh.raw_json["timeStamp"]["iso8601"],
-                    "parent_file_name": self.jh.raw_json["parentFileName"],
+                    "parent_file_name": self.jh.raw_json["sourceFileName"],
                     "site_name": self.jh.raw_json["geoLoc"]["siteName"],
                     "task": self.jh.raw_json["job"]["task"],
                 }
@@ -103,14 +151,19 @@ class Loader:
             return
 
         acars_type = "unknown"
+        frequency = None
 
-        if "fast" in self.jh.raw_json["job"]["mode"]:
+        if "vdl2" in obs and type(obs["vdl2"]) is dict and "freq" in obs["vdl2"]:
             acars_type = "fast"
-            frequency = obs["vdl2"]["freq"]
-
-        if "slow" in self.jh.raw_json["job"]["mode"]:
+            frequency = int(obs["vdl2"]["freq"])
+        elif "freq" in obs:
             acars_type = "slow"
-            frequency = int(obs["freq"] * 1000000)
+            raw_freq = obs["freq"]
+            frequency = int(raw_freq * 1000000) if raw_freq < 1000000 else int(raw_freq)
+
+        if frequency is None:
+            logger.warning("skipping observation with no frequency field")
+            return
 
         frequency_obs = {
             "acars_type": acars_type,
@@ -165,15 +218,7 @@ class Loader:
             self.file_failure(file_name)
             return
 
-        if self.jh.raw_json["fileName"] != file_name:
-            logger.warning(f"mismatched file name: {self.jh.raw_json['fileName']} vs {file_name}")
-            self.file_failure(file_name)
-            return
-
-        if (self.jh.raw_json["version"] == 1 and self.jh.raw_json["job"]["project"] == "capybara-v1"):
-            pass
-        else:
-            logger.warning(f"invalid version or project for {file_name}")
+        if not self.validate_v2_payload(self.jh.raw_json, file_name):
             self.file_failure(file_name)
             return
 
