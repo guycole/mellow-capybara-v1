@@ -1,0 +1,17 @@
+crateName: wombat04
+equipment:
+  hostName: c4g
+  hostType: odroid c4
+freshDir: /var/wombat/fresh/capybara
+rawDir: /tmp
+geoLoc:
+  altitude: 0
+  latitude: 38.108
+  longitude: -122.268
+  siteName: vallejo01
+receiver:
+  antenna: multicoupler
+  mode: acarsdec-sf1
+  receiverId: 11
+  task: capybara-v1-sf1-slow
+  type: rtl-sdr-v3

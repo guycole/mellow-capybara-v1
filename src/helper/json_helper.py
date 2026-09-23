@@ -96,6 +96,7 @@ schema = {
     "additionalProperties": False,
 }
 
+
 class JsonHelper:
 
     def __init__(self):
@@ -133,6 +134,7 @@ class JsonHelper:
             return False
 
         return True
+
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

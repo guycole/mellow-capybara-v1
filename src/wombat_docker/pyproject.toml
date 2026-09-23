@@ -1,0 +1,22 @@
+[project]
+name = "capybara-wombat-docker"
+version = "0.0.0"
+requires-python = ">=3.10"
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B"]
+ignore = ["N815"]
+
+[tool.ruff.lint.per-file-ignores]
+"test_*.py" = ["E402"]
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py"]
