@@ -58,7 +58,9 @@ def summarize_acarsdec_frequencies(bin_dir: Path) -> dict[str, object]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Summarize ACARSDEV frequency coverage")
+    parser = argparse.ArgumentParser(
+        description="Summarize ACARSDEV frequency coverage"
+    )
     parser.add_argument(
         "bin_dir",
         nargs="?",
@@ -73,7 +75,9 @@ def main() -> None:
     print(f"Minimum: {summary['min']:.3f}")
     print(f"Maximum: {summary['max']:.3f}")
     if gaps:
-        print(f"Gaps: {len(gaps)} missing step(s) -> {', '.join(f'{value:.3f}' for value in gaps)}")
+        print(
+            f"Gaps: {len(gaps)} missing step(s) -> {', '.join(f'{value:.3f}' for value in gaps)}"
+        )
     else:
         print("Gaps: none")
 

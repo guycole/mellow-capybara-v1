@@ -4,25 +4,29 @@
 # Development Environment: Ubuntu 22.04.5 LTS/python 3.10.12
 # Author: G.S. Cole (guycole at gmail dot com)
 #
-import logging
 import datetime
+import json
+import logging
 import os
+from typing import Any
 
 from helper.json_helper import JsonHelper
-
 from helper.postgres import PostGres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("loader")
+
 
 class Loader:
 
     def __init__(self, postgres: PostGres):
         self.postgres = postgres
 
-        self.failure_dir = os.environ.get("FAILURE_DIR", "/var/peccary/capybara/failure")
+        self.failure_dir = os.environ.get(
+            "FAILURE_DIR", "/var/peccary/capybara/failure"
+        )
         self.fresh_dir = os.environ.get("FRESH_DIR", "/var/peccary/capybara/fresh")
- 
+
         self.failure = 0
         self.success = 0
 
@@ -55,7 +59,9 @@ class Loader:
             return False
 
         if payload["fileName"] != file_name:
-            logger.warning(f"mismatched file name: {payload['fileName']} vs {file_name}")
+            logger.warning(
+                f"mismatched file name: {payload['fileName']} vs {file_name}"
+            )
             return False
 
         job = payload["job"]
@@ -81,13 +87,15 @@ class Loader:
         logger.info(f"file failure:{file_name}")
 
         self.failure += 1
-#        os.rename(file_name, self.failure_dir + file_name)
+
+    #        os.rename(file_name, self.failure_dir + file_name)
 
     def file_success(self, file_name: str):
-        #logger.info(f"file success:{file_name}")
+        # logger.info(f"file success:{file_name}")
 
         self.success += 1
-#        os.rename(file_name, self.success_dir + "/" + file_name)
+
+    #        os.rename(file_name, self.success_dir + "/" + file_name)
 
     def load_log_test(self, file_name: str) -> bool:
         try:
@@ -95,11 +103,14 @@ class Loader:
             if candidate is None:
                 logger.info(f"processing new file:{file_name}")
 
-                geo_loc = self.postgres.geo_loc_select_by_site(self.jh.raw_json["geoLoc"]["siteName"])
+                geo_loc = self.postgres.geo_loc_select_by_site(
+                    self.jh.raw_json["geoLoc"]["siteName"]
+                )
                 if len(geo_loc) == 0:
-                    logger.error(f"must insert geo_loc for site: {self.jh.raw_json['geoLoc']['siteName']}")
+                    site_name = self.jh.raw_json["geoLoc"]["siteName"]
+                    logger.error(f"must insert geo_loc for site: {site_name}")
                     return False
-           
+
                 load_log = {
                     "crate_name": self.jh.raw_json["crateName"],
                     "epoch_seconds": self.jh.raw_json["timeStamp"]["epochSeconds"],
@@ -131,7 +142,9 @@ class Loader:
                     "obs_quantity": len(self.jh.raw_json["observations"]),
                     "quantity_slow": quantity_slow,
                     "quantity_fast": quantity_fast,
-                    "score_date": datetime.date.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"][:10]),
+                    "score_date": datetime.date.fromisoformat(
+                        self.jh.raw_json["timeStamp"]["iso8601"][:10]
+                    ),
                 }
 
                 self.postgres.daily_score_insert_or_update(daily_score)
@@ -141,9 +154,8 @@ class Loader:
                 return False
         except Exception as error:
             logger.error(f"postgres insert failed for {file_name}: {error}")
-        
-        return False
 
+        return False
 
     def load_frequency(self, obs: dict[str, any]) -> None:
         if type(obs) is not dict:
@@ -171,34 +183,49 @@ class Loader:
             "frequency": frequency,
             "host_name": self.jh.raw_json["equipment"]["hostName"],
             "message_quantity": 1,
-            "score_date": datetime.date.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"][:10]),
+            "score_date": datetime.date.fromisoformat(
+                self.jh.raw_json["timeStamp"]["iso8601"][:10]
+            ),
         }
 
         self.postgres.frequency_insert_or_update(frequency_obs)
 
     def load_obs(self, obs: dict[str, any]) -> None:
-        if type(obs) is not dict:
-            logger.error(f"invalid observation type: {type(obs)}")
+        normalized = self._normalize_observation(obs)
+        if not normalized:
             return
 
+        obs = normalized
+
         if "vdl2" in obs:
-            print(f"vdl2 obs")
-            app = obs["vdl2"]["app"]
-            t = obs["vdl2"]["t"]
-            freq = obs["vdl2"]["freq"]
+            print("vdl2 obs")
             avlc = obs["vdl2"]["avlc"]
             print(f"{avlc['src']} {avlc['dst']}")
 
-#            app_name = obs["vdl2"]["name"]
-#            time_stamp = obs["vdl2"]["t"]["sec"]
-#            hex = obs["vdl2"]["avlc"]["src"]["addr"]
+        #            app_name = obs["vdl2"]["name"]
+        #            time_stamp = obs["vdl2"]["t"]["sec"]
+        #            hex = obs["vdl2"]["avlc"]["src"]["addr"]
         else:
-            print(f"acars obs")
-            app_name = obs["app"]["name"]
-            flight = obs["flight"]
-            frequency = obs["freq"]
-            tail = obs["tail"]
-            time_stamp = obs["timestamp"]
+            print("acars obs")
+            print(
+                f"{obs['app']['name']} {obs['flight']} {obs['freq']} "
+                f"{obs['tail']} {obs['timestamp']}"
+            )
+
+    def _normalize_observation(self, obs: Any) -> dict[str, Any]:
+        if isinstance(obs, dict):
+            return obs
+
+        if isinstance(obs, str):
+            try:
+                parsed = json.loads(obs)
+                if isinstance(parsed, dict):
+                    return parsed
+            except Exception as error:
+                logger.error("invalid observation JSON payload: %s", error)
+
+        logger.error("invalid observation type: %s", type(obs))
+        return {}
 
     def file_processor(self, file_name: str) -> None:
         logger.info(f"processing files: {file_name}")
@@ -228,9 +255,9 @@ class Loader:
             for obs in self.jh.raw_json["observations"]:
                 self.load_frequency(obs)
 
-#                self.load_obs(obs)
+        #                self.load_obs(obs)
 
-#            self.file_success(file_name)
+        #            self.file_success(file_name)
         else:
             self.file_failure(file_name)
 
@@ -245,6 +272,7 @@ class Loader:
             self.file_processor(target)
 
         logger.info(f"loader success:{self.success} failure:{self.failure}")
+
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

@@ -11,7 +11,7 @@ import socket
 import subprocess
 import sys
 import time
-from typing import Sequence
+from collections.abc import Sequence
 
 import yaml
 
@@ -28,7 +28,9 @@ class BootBoy:
             return False
 
         if os.geteuid() != 0:
-            print(f"{service_name} management skipped: must run as root (systemd boot path).")
+            reason = "must run as root"
+            context = "systemd boot path"
+            print(f"{service_name} management skipped: {reason} ({context}).")
             return False
 
         return True
@@ -36,7 +38,11 @@ class BootBoy:
     def run_systemctl(self, action: str, service_name: str) -> tuple[int, str]:
         # Use --no-block for start so systemd queues the job and returns
         # immediately, preventing a deadlock when bootboy itself runs under systemd.
-        cmd = ["systemctl", "--no-block", action, service_name] if action == "start" else ["systemctl", action, service_name]
+        cmd = (
+            ["systemctl", "--no-block", action, service_name]
+            if action == "start"
+            else ["systemctl", action, service_name]
+        )
         returncode, _, stderr = self.run_command(cmd)
         return returncode, stderr
 
@@ -44,8 +50,14 @@ class BootBoy:
         print(f"{service_name} failed to reach active state.")
 
         commands = [
-            ("systemctl status", ["systemctl", "status", "--no-pager", "--full", service_name]),
-            ("recent journal", ["journalctl", "-u", service_name, "-n", "20", "--no-pager"]),
+            (
+                "systemctl status",
+                ["systemctl", "status", "--no-pager", "--full", service_name],
+            ),
+            (
+                "recent journal",
+                ["journalctl", "-u", service_name, "-n", "20", "--no-pager"],
+            ),
         ]
 
         for label, cmd in commands:
@@ -75,7 +87,7 @@ class BootBoy:
         admin_json_path = f"/var/wombat/admin/{target}.json"
 
         try:
-            with open(admin_json_path, "r") as f:
+            with open(admin_json_path) as f:
                 config_data = json.load(f)
         except Exception as e:
             print(f"Error reading {admin_json_path}: {e}")
@@ -118,13 +130,18 @@ class BootBoy:
         return receiver.get("task", "xxx")
 
     def crontab(self) -> None:
-        crontab_entry = "13 * * * * $HOME/github/mellow-capybara-v1/bin/collector.sh > /dev/null 2>&1"
+        crontab_entry = (
+            "13 * * * * $HOME/github/mellow-capybara-v1/bin/collector.sh "
+            "> /dev/null 2>&1"
+        )
 
         # Always overwrite — collector is dedicated to this workload and must have
         # exactly one cron entry.
         new_crontab = crontab_entry + "\n"
         try:
-            proc = subprocess.run(["crontab", "-u", "wombat", "-"], input=new_crontab, text=True)
+            proc = subprocess.run(
+                ["crontab", "-u", "wombat", "-"], input=new_crontab, text=True
+            )
             if proc.returncode == 0:
                 print("Crontab updated for capybara.")
             else:
@@ -162,6 +179,7 @@ class BootBoy:
             self.verify_service_active(service_name)
         else:
             print(f"Failed to start {service_name}: {stderr}")
+
 
 #
 #

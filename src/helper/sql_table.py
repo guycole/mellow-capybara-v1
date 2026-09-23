@@ -7,16 +7,17 @@
 from datetime import datetime
 
 from sqlalchemy import Column
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, String
+from sqlalchemy import BigInteger, Date, DateTime, Float, Integer, String
 
 from sqlalchemy.orm import registry
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.ext.declarative import declared_attr
 
 mapper_registry = registry()
 
+
 class Base(DeclarativeBase):
     pass
+
 
 class DailyScore(Base):
     __tablename__ = "capybara_daily_score"
@@ -40,6 +41,7 @@ class DailyScore(Base):
     def __repr__(self):
         return f"daily_score({self.score_date} {self.host_name})"
 
+
 class Frequency(Base):
     __tablename__ = "capybara_frequency"
 
@@ -61,6 +63,7 @@ class Frequency(Base):
 
     def __repr__(self):
         return f"frequency({self.score_date} {self.host_name})"
+
 
 class GeoLoc(Base):
     __tablename__ = "capybara_geo_loc"
@@ -87,6 +90,7 @@ class GeoLoc(Base):
 
     def __repr__(self):
         return f"geo_loc({self.site_name} {self.host_name})"
+
 
 class LoadLog(Base):
     """load_log table definition"""
@@ -122,7 +126,10 @@ class LoadLog(Base):
         self.task = args["task"]
 
     def __repr__(self):
-        return f"load_log({self.file_name} {self.obs_time} {self.task} {self.host_name})"
+        return (
+            f"load_log({self.file_name} {self.obs_time} {self.task} {self.host_name})"
+        )
+
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

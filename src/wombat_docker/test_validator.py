@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 import sys
 import types
 from pathlib import Path
@@ -16,7 +17,7 @@ class PostGres:  # pragma: no cover - test-only import shim
 fake_postgres.PostGres = PostGres
 sys.modules["helper.postgres"] = fake_postgres
 
-from wombat_docker.validator import Validator
+from wombat_docker.validator import CapybaraValidator
 
 
 class DummyPostGres:
@@ -33,14 +34,14 @@ def _load_sample_v2_payload() -> dict:
 
 
 def test_validate_v2_payload_accepts_sample() -> None:
-    validator = Validator(DummyPostGres())
+    validator = CapybaraValidator(logging.getLogger("test"), DummyPostGres())
     payload = _load_sample_v2_payload()
 
     assert validator.validate_v2_payload(payload, payload["fileName"])
 
 
 def test_validate_v2_payload_rejects_v1_shape() -> None:
-    validator = Validator(DummyPostGres())
+    validator = CapybaraValidator(logging.getLogger("test"), DummyPostGres())
     payload = _load_sample_v2_payload()
 
     legacy_payload = copy.deepcopy(payload)

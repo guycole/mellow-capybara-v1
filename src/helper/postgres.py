@@ -10,9 +10,8 @@
 
 import datetime
 import logging
-import time
 
-from typing import List, Dict
+from typing import List
 
 import sqlalchemy
 from sqlalchemy import and_
@@ -29,6 +28,7 @@ from helper.sql_table import (
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("capybara")
+
 
 class PostGres:
     db_engine = None
@@ -63,7 +63,7 @@ class PostGres:
             logger.exception("daily_score_insert_or_update failed: %s", error)
 
         return candidate
-    
+
     def frequency_insert_or_update(self, args: dict[str, any]) -> Frequency:
         candidate = Frequency(args)
 
@@ -93,7 +93,9 @@ class PostGres:
         return candidate
 
     def geo_loc_select_by_site(self, site_name: str) -> List[GeoLoc]:
-        statement = select(GeoLoc).filter_by(site_name=site_name).order_by(GeoLoc.fix_time)
+        statement = (
+            select(GeoLoc).filter_by(site_name=site_name).order_by(GeoLoc.fix_time)
+        )
 
         with self.Session() as session:
             return session.scalars(statement).all()
@@ -129,6 +131,7 @@ class PostGres:
             return session.scalars(
                 select(LoadLog).filter_by(file_name=file_name)
             ).first()
+
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

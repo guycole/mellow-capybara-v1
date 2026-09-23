@@ -74,7 +74,9 @@ def main() -> None:
     print(f"Minimum: {summary['min']:.3f}")
     print(f"Maximum: {summary['max']:.3f}")
     if gaps:
-        print(f"Gaps: {len(gaps)} missing step(s) -> {', '.join(f'{value:.3f}' for value in gaps)}")
+        print(
+            f"Gaps: {len(gaps)} missing step(s) -> {', '.join(f'{value:.3f}' for value in gaps)}"
+        )
     else:
         print("Gaps: none")
 

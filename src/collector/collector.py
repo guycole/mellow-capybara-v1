@@ -7,68 +7,99 @@
 import datetime
 import json
 import logging
-import os
-import pydantic
 import shutil
 import sys
 import time
 import uuid
 import zoneinfo
+from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
 
+import pydantic
 import yaml
 from yaml.loader import SafeLoader
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("capybara")
 
+
 class Equipment(pydantic.BaseModel):
-    hostName: str
-    hostType: str
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
+    host_name: str = pydantic.Field(alias="hostName")
+    host_type: str = pydantic.Field(alias="hostType")
+
 
 class GeoLoc(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
     altitude: float
     latitude: float
     longitude: float
-    siteName: str
+    site_name: str = pydantic.Field(alias="siteName")
+
 
 class Job(pydantic.BaseModel):
     mode: str
     project: str
     task: str
 
+
 class Receiver(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
     antenna: str
-    receiverId: int
+    receiver_id: int = pydantic.Field(alias="receiverId")
     task: str
     type: str
 
+
 class TimeStamp(pydantic.BaseModel):
-    epochSeconds: int = pydantic.Field(default_factory=lambda: int(time.time()))
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
+    epoch_seconds: int = pydantic.Field(
+        default_factory=lambda: int(time.time()), alias="epochSeconds"
+    )
     iso8601: str = ""
 
     @pydantic.model_validator(mode="after")
     def sync_iso8601_from_epoch(self) -> "TimeStamp":
         self.iso8601 = datetime.datetime.fromtimestamp(
-            self.epochSeconds, tz=zoneinfo.ZoneInfo("UTC")
+            self.epoch_seconds, tz=zoneinfo.ZoneInfo("UTC")
         ).isoformat()
         return self
 
+
 class CapybaraModel(pydantic.BaseModel):
-    crateName: str
-    fileName: str
-    sourceFileName: str
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
+    crate_name: str = pydantic.Field(alias="crateName")
+    file_name: str = pydantic.Field(alias="fileName")
+    source_file_name: str = pydantic.Field(alias="sourceFileName")
     version: int = 2
     equipment: Equipment
-    geoLoc: GeoLoc
+    geo_loc: GeoLoc = pydantic.Field(alias="geoLoc")
     job: Job
     receiver: Receiver
-    timeStamp: TimeStamp
+    time_stamp: TimeStamp = pydantic.Field(alias="timeStamp")
     observations: list[dict[str, Any]]
 
-class Collector:
 
-    def __init__(self, args: dict[str, any]):
+class CollectorBase(ABC):
+
+    @abstractmethod
+    def discover_candidates(self) -> list[Path]:
+        pass
+
+    @abstractmethod
+    def execute(self) -> int:
+        pass
+
+
+class Collector(CollectorBase):
+
+    def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crateName"]
         self.fresh_dir = args["freshDir"]
         self.raw_dir = args["rawDir"]
@@ -86,7 +117,7 @@ class Collector:
 
         self.time_stamp = TimeStamp()
 
-    def file_discovery(self):
+    def discover_candidates(self) -> list[Path]:
         gmt_now = datetime.datetime.now(datetime.timezone.utc)
 
         year = gmt_now.year
@@ -100,33 +131,32 @@ class Collector:
         # acarsdec output filenames have the form  acars_YYYYMMDD_HH.json
         acars_current = f"acars_{year}{month:02d}{day:02d}_{hour:02d}.json"
 
-        results = []
-
-        os.chdir(self.raw_dir)
-        targets = sorted(os.listdir("."))
-        logger.info(f"{len(targets)} files noted")
+        results: list[Path] = []
+        raw_dir = Path(self.raw_dir)
+        targets = sorted(raw_dir.iterdir())
+        logger.info("%s files noted", len(targets))
 
         for target in targets:
-            if target.startswith("acars"):
-                if target == acars_current:
-                    print(f"skipping {target}")
+            if target.name.startswith("acars"):
+                if target.name == acars_current:
+                    logger.info("skipping %s", target.name)
                 else:
-                    print(f"adding {target} to acars")
-                    results.append(f"{self.raw_dir}/{target}")
+                    logger.info("adding %s to acars", target.name)
+                    results.append(target)
 
-            if target.startswith("vdl2"):
-                if target == dumpvdl2_current:
-                    print(f"skipping {target}")
+            if target.name.startswith("vdl2"):
+                if target.name == dumpvdl2_current:
+                    logger.info("skipping %s", target.name)
                 else:
-                    print(f"adding {target} to vdl2")
-                    results.append(f"{self.raw_dir}/{target}")
+                    logger.info("adding %s to vdl2", target.name)
+                    results.append(target)
 
         return results
 
-    def read_observations(self, file_name: str):
-        observations = []
+    def read_observations(self, file_name: str) -> list[dict[str, Any]]:
+        observations: list[dict[str, Any]] = []
 
-        with open(file_name, "r") as acars_file:
+        with open(file_name) as acars_file:
             # must be read line by line because file is not valid json list
             try:
                 buffer = acars_file.readlines()
@@ -140,45 +170,48 @@ class Collector:
         return observations
 
     def write_json_wrapper(
-        self, observations: list[str], source_file_name: str
-    ) -> bool:
+        self, observations: list[dict[str, Any]], source_file_name: str
+    ) -> int:
         file_name = f"{str(uuid.uuid4())}.json"
 
         capybara_model = CapybaraModel(
-            crateName = self.crate_name,
-            fileName = file_name,
-            sourceFileName = source_file_name,
-            equipment = self.equipment,
-            geoLoc = self.geo_loc,
-            job = self.job,
-            receiver = self.receiver,
-            timeStamp = self.time_stamp,
-            observations = observations
+            crate_name=self.crate_name,
+            file_name=file_name,
+            source_file_name=source_file_name,
+            equipment=self.equipment,
+            geo_loc=self.geo_loc,
+            job=self.job,
+            receiver=self.receiver,
+            time_stamp=self.time_stamp,
+            observations=observations,
         )
 
         outfile_json = f"{self.fresh_dir}/{file_name}"
         with open(outfile_json, "w", encoding="utf-8") as out_file:
-            out_file.write(capybara_model.model_dump_json(indent=4))
+            out_file.write(capybara_model.model_dump_json(indent=4, by_alias=True))
 
         return 0
 
-    def execute(self) -> None:
-        logger.info(f"collector execute")
+    def execute(self) -> int:
+        logger.info("collector execute")
 
-        candidates = self.file_discovery()
-        logger.info(f"{len(candidates)} files to process")
+        candidates = self.discover_candidates()
+        logger.info("%s files to process", len(candidates))
 
         for candidate in candidates:
-            observations = self.read_observations(candidate)
-            source_file_name = os.path.basename(candidate)
+            observations = self.read_observations(str(candidate))
+            source_file_name = candidate.name
             retflag = self.write_json_wrapper(observations, source_file_name)
             if retflag == 0:
-                logger.info(f"successfully wrote wrapper for {source_file_name}")
+                logger.info("successfully wrote wrapper for %s", source_file_name)
             else:
-                logger.error(f"failed to write wrapper for {source_file_name}")
+                logger.error("failed to write wrapper for %s", source_file_name)
 
             dest_file = f"{self.fresh_dir}/{source_file_name}"
-            shutil.move(candidate, dest_file)
+            shutil.move(str(candidate), dest_file)
+
+        return 0
+
 
 #
 # argv[1] = configuration filename
@@ -189,13 +222,15 @@ if __name__ == "__main__":
     else:
         file_name = "config.yaml"
 
-    with open(file_name, "r") as in_file:
+    with open(file_name) as in_file:
         try:
             configuration = yaml.load(in_file, Loader=SafeLoader)
             collector = Collector(configuration)
-            collector.execute()
+            exit(collector.execute())
         except yaml.YAMLError as error:
-            print(error)
+            logger.error("YAML parse error: %s", error)
+
+    exit(1)
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***
