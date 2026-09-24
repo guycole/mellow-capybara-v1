@@ -1,9 +1,14 @@
+import json
 import sys
+import tempfile
 import unittest
+from copy import deepcopy
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from helper import json_helper as json_helper_module
 from helper.json_helper import JsonHelper
 
 
@@ -106,6 +111,25 @@ class JsonHelperSchemaTests(unittest.TestCase):
     def test_accepts_v2_sample_file(self) -> None:
         sample = Path(__file__).resolve().parents[1] / "samples" / "dffcc4f1-9536-4ada-bbf0-87bbf9e9e18f.json"
         self.assertTrue(self.helper.json_file_reader(str(sample), True))
+
+    def test_reader_allows_legacy_schema_missing_v2_top_level_keys(self) -> None:
+        payload = self._valid_v2_payload()
+
+        legacy_schema = deepcopy(json_helper_module.schema)
+        del legacy_schema["properties"]["receiver"]
+        del legacy_schema["properties"]["sourceFileName"]
+        legacy_schema["required"] = [
+            key
+            for key in legacy_schema["required"]
+            if key not in {"receiver", "sourceFileName"}
+        ]
+
+        with tempfile.NamedTemporaryFile("w", delete=False) as temp_file:
+            temp_file.write(json.dumps(payload))
+            temp_path = temp_file.name
+
+        with patch.object(json_helper_module, "schema", legacy_schema):
+            self.assertTrue(self.helper.json_file_reader(temp_path, True))
 
     def test_accepts_acarsdec_wrapper_shape(self) -> None:
         # Legacy test name retained for compatibility with existing test invocations.
