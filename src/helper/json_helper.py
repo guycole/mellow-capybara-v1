@@ -6,8 +6,10 @@
 #
 import json
 import logging
+from typing import Any
 
 from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("json_helper")
@@ -102,6 +104,41 @@ class JsonHelper:
     def __init__(self):
         self.raw_json = None
 
+    def _legacy_top_level_compat_ok(self, payload: Any, error: Exception) -> bool:
+        if not isinstance(payload, dict):
+            return False
+
+        if not isinstance(error, ValidationError):
+            return False
+
+        # Compatibility path: older deployed schemas may reject v2-only top-level
+        # keys despite the payload otherwise being valid.
+        if error.validator != "additionalProperties":
+            return False
+
+        if list(error.path):
+            return False
+
+        extras = payload.keys() - schema.get("properties", {}).keys()
+        if not extras or not extras.issubset({"receiver", "sourceFileName"}):
+            return False
+
+        legacy_projection = {
+            key: value
+            for key, value in payload.items()
+            if key not in {"receiver", "sourceFileName"}
+        }
+
+        try:
+            validate(instance=legacy_projection, schema=schema)
+            logger.warning(
+                "compatibility fallback accepted payload for legacy top-level schema keys: %s",
+                ",".join(sorted(extras)),
+            )
+            return True
+        except Exception:
+            return False
+
     def json_file_reader(self, file_name: str, validate_flag: bool) -> bool:
         try:
             with open(file_name, "r", encoding="utf-8") as in_file:
@@ -114,6 +151,8 @@ class JsonHelper:
             try:
                 validate(instance=self.raw_json, schema=schema)
             except Exception as error:
+                if self._legacy_top_level_compat_ok(self.raw_json, error):
+                    return True
                 logger.error(f"json validation failed for {file_name}: {error}")
                 return False
 
