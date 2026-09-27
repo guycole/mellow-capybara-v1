@@ -17,7 +17,10 @@ class BootBoyTests(unittest.TestCase):
             (0, "journal output", ""),
         ]
 
-        with patch.object(bootboy, "run_command", side_effect=command_results), patch("collector.bootboy.time.sleep"):
+        with (
+            patch.object(bootboy, "run_command", side_effect=command_results),
+            patch("collector.bootboy.time.sleep"),
+        ):
             with patch("builtins.print") as print_mock:
                 bootboy.verify_service_active("vdl2-dev01.service")
 
@@ -31,3 +34,4 @@ class BootBoyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

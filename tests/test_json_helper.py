@@ -65,7 +65,9 @@ class JsonHelperSchemaTests(unittest.TestCase):
         payload["observations"] = ['{"vdl2":{"app":{"name":"dumpvdl2","ver":"2.6.0"}}}']
 
         self.assertTrue(
-            self.helper.json_file_writer("/tmp/v2-string-observations-wrapper.json", payload)
+            self.helper.json_file_writer(
+                "/tmp/v2-string-observations-wrapper.json", payload
+            )
         )
 
     def test_rejects_missing_source_file_name(self) -> None:
@@ -97,7 +99,9 @@ class JsonHelperSchemaTests(unittest.TestCase):
         payload["receiver"]["receiverType"] = payload["receiver"].pop("type")
 
         self.assertFalse(
-            self.helper.json_file_writer("/tmp/reject-receiver-type-legacy-key.json", payload)
+            self.helper.json_file_writer(
+                "/tmp/reject-receiver-type-legacy-key.json", payload
+            )
         )
 
     def test_rejects_equipment_legacy_receiver_fields(self) -> None:
@@ -105,11 +109,17 @@ class JsonHelperSchemaTests(unittest.TestCase):
         payload["equipment"]["antenna"] = "multicoupler"
 
         self.assertFalse(
-            self.helper.json_file_writer("/tmp/reject-equipment-legacy-fields.json", payload)
+            self.helper.json_file_writer(
+                "/tmp/reject-equipment-legacy-fields.json", payload
+            )
         )
 
     def test_accepts_v2_sample_file(self) -> None:
-        sample = Path(__file__).resolve().parents[1] / "samples" / "dffcc4f1-9536-4ada-bbf0-87bbf9e9e18f.json"
+        sample = (
+            Path(__file__).resolve().parents[1]
+            / "samples"
+            / "dffcc4f1-9536-4ada-bbf0-87bbf9e9e18f.json"
+        )
         self.assertTrue(self.helper.json_file_reader(str(sample), True))
 
     def test_reader_allows_legacy_schema_missing_v2_top_level_keys(self) -> None:
@@ -135,7 +145,9 @@ class JsonHelperSchemaTests(unittest.TestCase):
         # Legacy test name retained for compatibility with existing test invocations.
         payload = self._valid_v2_payload()
 
-        self.assertTrue(self.helper.json_file_writer("/tmp/acars-wrapper.json", payload))
+        self.assertTrue(
+            self.helper.json_file_writer("/tmp/acars-wrapper.json", payload)
+        )
 
     def test_accepts_vdl2_wrapper_shape(self) -> None:
         payload = self._valid_v2_payload()
@@ -163,10 +175,13 @@ class JsonHelperSchemaTests(unittest.TestCase):
             },
         ]
 
-        self.assertTrue(self.helper.json_file_writer("/tmp/hybrid-wrapper.json", payload))
+        self.assertTrue(
+            self.helper.json_file_writer("/tmp/hybrid-wrapper.json", payload)
+        )
 
     def test_rejects_missing_parent_file_name(self) -> None:
-        # Legacy test name retained; now verifies parentFileName is not part of v2 schema.
+        # Legacy test name retained; now verifies parentFileName is not part of
+        # v2 schema.
         payload = self._valid_v2_payload()
         del payload["sourceFileName"]
 
@@ -181,7 +196,9 @@ class JsonHelperSchemaTests(unittest.TestCase):
         ]
 
         self.assertTrue(
-            self.helper.json_file_writer("/tmp/string-observations-wrapper.json", payload)
+            self.helper.json_file_writer(
+                "/tmp/string-observations-wrapper.json", payload
+            )
         )
 
 

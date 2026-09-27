@@ -5,12 +5,10 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import Column
-from sqlalchemy import BigInteger, Date, DateTime, Float, Integer, String
-
-from sqlalchemy.orm import registry
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import BigInteger, Column, Date, DateTime, Float, Integer, String
+from sqlalchemy.orm import DeclarativeBase, registry
 
 mapper_registry = registry()
 
@@ -30,7 +28,7 @@ class DailyScore(Base):
     quantity_fast = Column(Integer)
     score_date = Column(Date)
 
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crate_name"]
         self.file_quantity = args["file_quantity"]
         self.host_name = args["host_name"]
@@ -53,7 +51,7 @@ class Frequency(Base):
     mode = Column(String(16), nullable=False)
     score_date = Column(Date, nullable=False)
 
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crate_name"]
         self.frequency = args["frequency"]
         self.host_name = args["host_name"]
@@ -78,7 +76,7 @@ class GeoLoc(Base):
     site_name = Column(String)
     speed = Column(Float)
 
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.altitude = args["altitude"]
         self.course = args["course"]
         self.fix_time = args["fix_time"]
@@ -107,11 +105,11 @@ class LoadLog(Base):
     mode = Column(String)
     obs_quantity = Column(Integer)
     obs_time = Column(DateTime)
-    parent_file_name = Column(String)
+    source_file_name = Column(String)
     site_name = Column(String)
     task = Column(String)
 
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crate_name"]
         self.epoch_seconds = args["epoch_seconds"]
         self.file_name = args["file_name"]
@@ -121,7 +119,7 @@ class LoadLog(Base):
         self.mode = args["mode"]
         self.obs_quantity = args["obs_quantity"]
         self.obs_time = args["obs_time"]
-        self.parent_file_name = args["parent_file_name"]
+        self.source_file_name = args["source_file_name"]
         self.site_name = args["site_name"]
         self.task = args["task"]
 

@@ -230,7 +230,7 @@ class CapybaraValidator(Validator):
                     "mode": raw_buffer["job"]["mode"],
                     "obs_quantity": len(raw_buffer["observations"]),
                     "obs_time": raw_buffer["timeStamp"]["iso8601"],
-                    "parent_file_name": raw_buffer["sourceFileName"],
+                    "source_file_name": raw_buffer["sourceFileName"],
                     "site_name": raw_buffer["geoLoc"]["siteName"],
                     "task": raw_buffer["job"]["task"],
                 }

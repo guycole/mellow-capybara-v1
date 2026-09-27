@@ -9,7 +9,9 @@ from utility.vdl2_freq_test import summarize_vdl2_frequencies
 
 class Vdl2FrequencySummaryTests(unittest.TestCase):
     def test_vdl2_scripts_cover_full_025mhz_grid(self) -> None:
-        summary = summarize_vdl2_frequencies(Path(__file__).resolve().parents[1] / "bin")
+        summary = summarize_vdl2_frequencies(
+            Path(__file__).resolve().parents[1] / "bin"
+        )
 
         self.assertEqual(summary["count"], 37)
         self.assertEqual(summary["min"], 136.1)

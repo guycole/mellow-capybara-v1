@@ -10,14 +10,10 @@
 
 import datetime
 import logging
-
-from typing import List
+from typing import Any
 
 import sqlalchemy
-from sqlalchemy import and_
-from sqlalchemy import func
-from sqlalchemy import select
-from sqlalchemy import desc
+from sqlalchemy import and_, desc, func, select
 
 from helper.sql_table import (
     DailyScore,
@@ -37,7 +33,7 @@ class PostGres:
     def __init__(self, session: sqlalchemy.orm.session.sessionmaker):
         self.Session = session
 
-    def daily_score_insert_or_update(self, args: dict[str, any]) -> DailyScore:
+    def daily_score_insert_or_update(self, args: dict[str, Any]) -> DailyScore:
         candidate = DailyScore(args)
 
         try:
@@ -64,7 +60,7 @@ class PostGres:
 
         return candidate
 
-    def frequency_insert_or_update(self, args: dict[str, any]) -> Frequency:
+    def frequency_insert_or_update(self, args: dict[str, Any]) -> Frequency:
         candidate = Frequency(args)
 
         try:
@@ -92,7 +88,7 @@ class PostGres:
 
         return candidate
 
-    def geo_loc_select_by_site(self, site_name: str) -> List[GeoLoc]:
+    def geo_loc_select_by_site(self, site_name: str) -> list[GeoLoc]:
         statement = (
             select(GeoLoc).filter_by(site_name=site_name).order_by(GeoLoc.fix_time)
         )
@@ -100,7 +96,7 @@ class PostGres:
         with self.Session() as session:
             return session.scalars(statement).all()
 
-    def load_log_insert(self, args: dict[str, any]) -> LoadLog:
+    def load_log_insert(self, args: dict[str, Any]) -> LoadLog:
         candidate = LoadLog(args)
 
         try:
