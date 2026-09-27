@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import re
 from pathlib import Path
-from typing import List
 
 
 def extract_frequencies(script_path: Path) -> list[float]:
@@ -23,7 +22,7 @@ def collect_vdl2_frequencies(bin_dir: Path) -> list[float]:
     if not scripts:
         raise FileNotFoundError(f"No vdl2-dev scripts found in {bin_dir}")
 
-    frequencies: List[float] = []
+    frequencies: list[float] = []
     for script_path in scripts:
         frequencies.extend(extract_frequencies(script_path))
 
@@ -38,7 +37,7 @@ def summarize_frequencies(frequencies: list[float]) -> dict[str, object]:
     values = sorted(frequencies)
     start = values[0]
     end = values[-1]
-    expected: List[float] = []
+    expected: list[float] = []
     current = start
     while current <= end + 1e-9:
         expected.append(round(current, 3))
@@ -74,8 +73,9 @@ def main() -> None:
     print(f"Minimum: {summary['min']:.3f}")
     print(f"Maximum: {summary['max']:.3f}")
     if gaps:
+        gap_list = ", ".join(f"{value:.3f}" for value in gaps)
         print(
-            f"Gaps: {len(gaps)} missing step(s) -> {', '.join(f'{value:.3f}' for value in gaps)}"
+            f"Gaps: {len(gaps)} missing step(s) -> {gap_list}"
         )
     else:
         print("Gaps: none")

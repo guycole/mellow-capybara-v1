@@ -9,7 +9,9 @@ from utility.acarsdec_freq_test import summarize_acarsdec_frequencies
 
 class AcarsdecFrequencySummaryTests(unittest.TestCase):
     def test_acarsdec_scripts_cover_full_025mhz_grid(self) -> None:
-        summary = summarize_acarsdec_frequencies(Path(__file__).resolve().parents[1] / "bin")
+        summary = summarize_acarsdec_frequencies(
+            Path(__file__).resolve().parents[1] / "bin"
+        )
 
         self.assertEqual(summary["count"], 77)
         self.assertEqual(summary["min"], 129.0)

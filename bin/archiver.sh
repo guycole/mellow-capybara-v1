@@ -13,7 +13,7 @@ FILE_NAME="${HOST_NAME}-${TODAY}.tgz"
 #
 ARCHIVE_DIR="archive"
 EXPORT_DIR="export"
-SOURCE_DIR="capybara"
+SOURCE_DIR="capybara-v1"
 SUCCESS_DIR="success"
 WORK_DIR="/var/wombat/capybara"
 #

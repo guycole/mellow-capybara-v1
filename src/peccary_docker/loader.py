@@ -32,7 +32,7 @@ class Loader:
 
         self.jh = JsonHelper()
 
-    def validate_v2_payload(self, payload: dict[str, any], file_name: str) -> bool:
+    def validate_v2_payload(self, payload: dict[str, Any], file_name: str) -> bool:
         if not isinstance(payload, dict):
             logger.warning(f"payload is not dict for {file_name}")
             return False
@@ -121,7 +121,7 @@ class Loader:
                     "mode": self.jh.raw_json["job"]["mode"],
                     "obs_quantity": len(self.jh.raw_json["observations"]),
                     "obs_time": self.jh.raw_json["timeStamp"]["iso8601"],
-                    "parent_file_name": self.jh.raw_json["sourceFileName"],
+                    "source_file_name": self.jh.raw_json["sourceFileName"],
                     "site_name": self.jh.raw_json["geoLoc"]["siteName"],
                     "task": self.jh.raw_json["job"]["task"],
                 }
@@ -157,15 +157,15 @@ class Loader:
 
         return False
 
-    def load_frequency(self, obs: dict[str, any]) -> None:
-        if type(obs) is not dict:
+    def load_frequency(self, obs: dict[str, Any]) -> None:
+        if not isinstance(obs, dict):
             logger.error(f"invalid observation type: {type(obs)}")
             return
 
         acars_type = "unknown"
         frequency = None
 
-        if "vdl2" in obs and type(obs["vdl2"]) is dict and "freq" in obs["vdl2"]:
+        if "vdl2" in obs and isinstance(obs["vdl2"], dict) and "freq" in obs["vdl2"]:
             acars_type = "fast"
             frequency = int(obs["vdl2"]["freq"])
         elif "freq" in obs:
@@ -190,7 +190,7 @@ class Loader:
 
         self.postgres.frequency_insert_or_update(frequency_obs)
 
-    def load_obs(self, obs: dict[str, any]) -> None:
+    def load_obs(self, obs: dict[str, Any]) -> None:
         normalized = self._normalize_observation(obs)
         if not normalized:
             return
@@ -230,7 +230,7 @@ class Loader:
     def file_processor(self, file_name: str) -> None:
         logger.info(f"processing files: {file_name}")
 
-        if os.path.isfile(file_name) is False:
+        if not os.path.isfile(file_name):
             logger.warning(f"skipping non-file:{file_name}")
             self.file_failure(file_name)
             return

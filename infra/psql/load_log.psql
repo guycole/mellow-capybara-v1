@@ -11,7 +11,7 @@
 -- mode is collection mode
 -- obs_quantity is population of observations in file
 -- obs_time is observation time from timeStamp.iso8601
--- parent_file_name is original collection file name
+-- source_file_name is original collection file name
 -- site_name is from preamble geoLoc.siteName
 -- task from receiver.task
 --
@@ -27,7 +27,7 @@ create table capybara_load_log (
   mode              varchar(32)  not null,
   obs_quantity      smallint     not null,
   obs_time          timestamp    not null,
-  parent_file_name  varchar(48)  unique not null,
+  source_file_name  varchar(48)  unique not null,
   site_name         varchar(32)  not null,
   task              varchar(32)  not null
 );

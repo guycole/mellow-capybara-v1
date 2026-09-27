@@ -132,7 +132,8 @@ class JsonHelper:
         try:
             validate(instance=legacy_projection, schema=schema)
             logger.warning(
-                "compatibility fallback accepted payload for legacy top-level schema keys: %s",
+                "compatibility fallback accepted payload "
+                "for legacy top-level schema keys: %s",
                 ",".join(sorted(extras)),
             )
             return True
@@ -141,7 +142,7 @@ class JsonHelper:
 
     def json_file_reader(self, file_name: str, validate_flag: bool) -> bool:
         try:
-            with open(file_name, "r", encoding="utf-8") as in_file:
+            with open(file_name, encoding="utf-8") as in_file:
                 self.raw_json = json.load(in_file)
         except Exception as error:
             logger.error(f"file read failed for {file_name}: {error}")
@@ -158,7 +159,7 @@ class JsonHelper:
 
         return True
 
-    def json_file_writer(self, file_name: str, json_data: dict[str, any]) -> bool:
+    def json_file_writer(self, file_name: str, json_data: dict[str, Any]) -> bool:
         try:
             validate(instance=json_data, schema=schema)
         except Exception as error:
